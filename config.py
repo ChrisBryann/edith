@@ -1,0 +1,48 @@
+import os
+from typing import List, Dict, Any
+from dataclasses import dataclass
+from datetime import datetime
+
+@dataclass
+class EmailConfig:
+    email_address: str
+    is_primary: bool = False
+    account_type: str = "personal"  # personal, work, school
+
+@dataclass
+class EmailMessage:
+    id: str
+    subject: str
+    sender: str
+    body: str
+    date: datetime
+    is_relevant: bool = False
+    account_type: str = "personal"
+
+@dataclass
+class CalendarEvent:
+    id: str
+    title: str
+    start_time: datetime
+    end_time: datetime
+    description: str
+    source_email: str
+    calendar_type: str = "primary"
+
+class EmailAssistantConfig:
+    def __init__(self):
+        self.email_accounts: List[EmailConfig] = []
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        self.gmail_credentials_path = os.getenv("GMAIL_CREDENTIALS_PATH", "credentials.json")
+        self.chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        
+    def add_email_account(self, email_address: str, is_primary: bool = False, account_type: str = "personal"):
+        config = EmailConfig(email_address=email_address, is_primary=is_primary, account_type=account_type)
+        self.email_accounts.append(config)
+        
+    def get_primary_email(self) -> str | None:
+        for config in self.email_accounts:
+            if config.is_primary:
+                return config.email_address
+        return self.email_accounts[0].email_address if self.email_accounts else None

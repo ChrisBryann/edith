@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Google Credentials (NEVER COMMIT THESE)
+credentials.json
+token.json
+token_*.json
+token_*.pickle
+client_secret_*.json
+
+# Database
+chroma_db/
+test_chroma_db/
+*.db
