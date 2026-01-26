@@ -116,13 +116,6 @@ GET /relevant-emails?limit=20
 ```
 
 ## Architecture
-
-### Ingestion Architecture
-<<<<<<< HEAD
-![Ingestion Architecture](/ingestion_architecture.png)
-
-### Query Architecture
-![Query Architecture](/query_architecture.png)
 =======
 ```mermaid
 graph TD
