@@ -185,7 +185,6 @@ graph TD
     RAG -- "Response" --> API
     API --> User
 ```
->>>>>>> eec9491 (docs: Refactor architecture diagrams into Ingestion and Query flows)
 
 ### Core Components
 
