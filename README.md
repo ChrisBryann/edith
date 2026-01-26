@@ -118,10 +118,10 @@ GET /relevant-emails?limit=20
 ## Architecture
 
 ### Ingestion Architecture
-![Ingestion Architecture](assets/ingestion_architecture.png)
+![Ingestion Architecture](/ingestion_architecture.png)
 
 ### Query Architecture
-![Query Architecture](assets/query_architecture.png)
+![Query Architecture](/query_architecture.png)
 
 ### Core Components
 
