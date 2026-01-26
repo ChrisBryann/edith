@@ -116,7 +116,6 @@ GET /relevant-emails?limit=20
 ```
 
 ## Architecture
-=======
 ```mermaid
 graph TD
     User[User / Client]
