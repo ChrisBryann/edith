@@ -118,10 +118,74 @@ GET /relevant-emails?limit=20
 ## Architecture
 
 ### Ingestion Architecture
+<<<<<<< HEAD
 ![Ingestion Architecture](/ingestion_architecture.png)
 
 ### Query Architecture
 ![Query Architecture](/query_architecture.png)
+=======
+```mermaid
+graph TD
+    User[User / Client]
+    
+    subgraph "Edith Ingestion Pipeline"
+        API[FastAPI / Scheduler]
+        Gmail[Gmail Service]
+        Filter[Email Filter]
+        RAG[RAG System]
+        DB[(ChromaDB)]
+    end
+    
+    subgraph "Google Workspace"
+        G_API[Gmail API]
+    end
+
+    User -- "Trigger Sync" --> API
+    API -- "Poll (historyId)" --> Gmail
+    Gmail -- "Fetch Changes" --> G_API
+    G_API -- "New Emails" --> Gmail
+    Gmail -- "Parsed Emails" --> Filter
+    Filter -- "Relevant Emails" --> RAG
+    RAG -- "Generate Embeddings" --> DB
+```
+
+### Query Architecture
+```mermaid
+graph TD
+    User[User / Client]
+    
+    subgraph "Edith Query Engine"
+        API[FastAPI]
+        Cal[Calendar Service]
+        RAG[RAG System]
+        DB[(ChromaDB)]
+    end
+    
+    subgraph "External Services"
+        G_CAL[Google Calendar API]
+        LLM[Google Gemini]
+    end
+
+    User -- "Ask Question" --> API
+    
+    %% Context Gathering
+    API -- "Fetch Schedule" --> Cal
+    Cal -- "List Events" --> G_CAL
+    G_CAL -- "Events Data" --> Cal
+    Cal -- "Calendar Context" --> API
+    
+    %% RAG Flow
+    API -- "Query + Context" --> RAG
+    RAG -- "Vector Search" --> DB
+    DB -- "Relevant Docs" --> RAG
+    
+    %% Generation
+    RAG -- "Prompt Construction" --> LLM
+    LLM -- "Natural Language Answer" --> RAG
+    RAG -- "Response" --> API
+    API --> User
+```
+>>>>>>> eec9491 (docs: Refactor architecture diagrams into Ingestion and Query flows)
 
 ### Core Components
 

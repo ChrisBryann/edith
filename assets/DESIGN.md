@@ -10,7 +10,7 @@ graph TD
     User[User / Client]
     
     subgraph "Edith Ingestion Pipeline"
-        API[FastAPI / Scheduler]
+        API[FastAPI / Background Task]
         Gmail[Gmail Service]
         Filter[Email Filter]
         RAG[RAG System]
@@ -22,9 +22,9 @@ graph TD
     end
 
     User -- "Trigger Sync" --> API
-    API -- "Poll (historyId)" --> Gmail
-    Gmail -- "Fetch Changes" --> G_API
-    G_API -- "New Emails" --> Gmail
+    API -- "Poll / Fetch" --> Gmail
+    Gmail -- "Get Emails" --> G_API
+    G_API -- "Raw Content" --> Gmail
     Gmail -- "Parsed Emails" --> Filter
     Filter -- "Relevant Emails" --> RAG
     RAG -- "Generate Embeddings" --> DB
@@ -51,8 +51,8 @@ graph TD
     
     %% Context Gathering
     API -- "Fetch Schedule" --> Cal
-    Cal -- "List Events" --> G_CAL
-    G_CAL -- "Events Data" --> Cal
+    Cal -- "Get Events" --> G_CAL
+    G_CAL -- "Events" --> Cal
     Cal -- "Calendar Context" --> API
     
     %% RAG Flow
