@@ -34,6 +34,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 GMAIL_CREDENTIALS_PATH=credentials.json
 CHROMA_DB_PATH=./chroma_db
 GEMINI_MODEL=gemini-2.5-flash
+EDITH_ENV=dev
 ```
 
 ### 3. Google API Setup
@@ -115,6 +116,12 @@ GET /relevant-emails?limit=20
 ```
 
 ## Architecture
+
+### Ingestion Architecture
+![Ingestion Architecture](assets/ingestion_architecture.png)
+
+### Query Architecture
+![Query Architecture](assets/query_architecture.png)
 
 ### Core Components
 

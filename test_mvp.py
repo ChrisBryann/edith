@@ -77,11 +77,10 @@ def run_rag_test():
 
     # 0. Load Environment Variables
     load_dotenv()
+    os.environ["EDITH_ENV"] = "test"
 
     # 1. Configuration
     config = EmailAssistantConfig()
-    # Use a separate test database to avoid messing up real data
-    config.chroma_db_path = "./test_chroma_db"
     
     # Cleanup previous test runs
     if os.path.exists(config.chroma_db_path):

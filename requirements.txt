@@ -8,3 +8,4 @@ chromadb
 google-genai
 python-dotenv
 python-multipart
+mlflow
