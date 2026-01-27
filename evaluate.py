@@ -8,9 +8,9 @@ from google import genai
 from google.genai import types
 
 # Import system components
-from config import EmailAssistantConfig, EmailMessage
-from email_rag import EmailRAGSystem
-from test_mvp import get_dummy_data # Reuse our dummy data generator
+from core.config import EmailAssistantConfig
+from services.email.rag import EmailRAGSystem
+from test_mvp import get_dummy_data  # Reuse our dummy data generator
 
 def setup_test_environment():
     """Sets up a clean test environment with dummy data."""

@@ -5,12 +5,13 @@ from pydantic import BaseModel
 from typing import List, Optional
 import os
 
-from config import EmailAssistantConfig, EmailMessage, CalendarEvent
-from gmail_service import GmailService
-from calendar_service import CalendarService
-from notification_service import NotificationService
-from email_rag import EmailRAGSystem
-from email_filter import EmailFilter
+from core.config import EmailAssistantConfig
+from core.models import CalendarEvent
+from services.email.fetcher import EmailFetcher
+from services.calendar.service import CalendarService
+from services.notification.service import NotificationService
+from services.email.rag import EmailRAGSystem
+from services.email.filter import EmailFilter
 
 app = FastAPI(
     title="Edith API",
@@ -20,7 +21,7 @@ app = FastAPI(
 
 # --- Global Services ---
 config = EmailAssistantConfig()
-gmail_service = GmailService(config)
+email_fetcher = EmailFetcher(config)
 calendar_service = CalendarService(config)
 notification_service = NotificationService(calendar_service)
 email_filter = EmailFilter()
@@ -60,16 +61,16 @@ async def startup_event():
     
     # Attempt authentication
     try:
-        if gmail_service.authenticate():
+        if email_fetcher.authenticate():
             print("Gmail authenticated.")
             
             # Auto-configure primary email
-            user_email = gmail_service.get_profile_email()
+            user_email = email_fetcher.get_profile_email()
             config.add_email_account(user_email, is_primary=True)
             
             # Share credentials with Calendar Service
-            if gmail_service.creds:
-                calendar_service.authenticate(gmail_service.creds)
+            if email_fetcher.creds:
+                calendar_service.authenticate(email_fetcher.creds)
                 print("Calendar authenticated.")
                 
                 # Start background notification service
@@ -90,12 +91,12 @@ async def add_email_account(account: EmailAccountRequest):
 
 @app.post("/sync-emails")
 async def sync_emails(background_tasks: BackgroundTasks):
-    if not gmail_service.service:
+    if not email_fetcher.creds: # Check auth status
         raise HTTPException(status_code=401, detail="Service not authenticated")
 
     def process_sync():
         print("Starting background sync...")
-        emails = gmail_service.get_emails(max_results=50)
+        emails = email_fetcher.get_emails(max_results=50)
         relevant = email_filter.filter_relevant_emails(emails)
         if relevant:
             system = get_rag_system()
@@ -132,9 +133,9 @@ async def get_calendar_events(days_ahead: int = 30):
 
 @app.get("/relevant-emails")
 async def get_relevant_emails(limit: int = 20):
-    if not gmail_service.service:
+    if not email_fetcher.creds:
         raise HTTPException(status_code=401, detail="Service not authenticated")
-    emails = gmail_service.get_emails(max_results=limit*2)
+    emails = email_fetcher.get_emails(max_results=limit*2)
     relevant = email_filter.filter_relevant_emails(emails)
     return relevant[:limit]
 

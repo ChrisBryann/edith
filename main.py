@@ -3,11 +3,12 @@ import shutil
 from dotenv import load_dotenv
 
 # Import our modular services
-from config import EmailAssistantConfig, Environment
-from gmail_service import GmailService
-from calendar_service import CalendarService
-from email_rag import EmailRAGSystem
-from email_filter import EmailFilter
+from core.config import EmailAssistantConfig
+from core.models import Environment
+from services.email.fetcher import EmailFetcher
+from services.calendar.service import CalendarService
+from services.email.rag import EmailRAGSystem
+from services.email.filter import EmailFilter
 
 def main():
     # 1. Load Environment
@@ -29,24 +30,24 @@ def main():
         shutil.rmtree(config.chroma_db_path)
 
     # 2. Initialize Services
-    gmail_service = GmailService(config)
+    email_fetcher = EmailFetcher(config)
     calendar_service = CalendarService(config)
     email_filter = EmailFilter()
     rag_system = EmailRAGSystem(config)
 
     # 3. Authenticate
     print("\n🔐 Authenticating with Google...")
-    if gmail_service.authenticate():
+    if email_fetcher.authenticate():
         print("   ✅ Gmail Authenticated")
         
         # Fetch and configure email account (Critical for CalendarService)
-        user_email = gmail_service.get_profile_email()
+        user_email = email_fetcher.get_profile_email()
         config.add_email_account(user_email, is_primary=True)
         print(f"   📧 Logged in as: {user_email}")
 
-        # Share credentials with Calendar
-        if gmail_service.creds:
-            calendar_service.authenticate(gmail_service.creds)
+        # Share credentials with Calendar (via the fetcher's underlying provider creds)
+        if email_fetcher.creds:
+            calendar_service.authenticate(email_fetcher.creds)
             print("   ✅ Calendar Authenticated")
     else:
         print("   ❌ Authentication failed.")
@@ -55,7 +56,7 @@ def main():
     # 4. Sync Data (Optional for CLI demo)
     print("\n📨 Fetching recent emails...")
     # Fetching 100 emails from the last 30 days (filtering at API level for efficiency)
-    emails = gmail_service.get_emails(max_results=100, query="newer_than:30d")
+    emails = email_fetcher.get_emails(max_results=100, query="newer_than:30d")
     relevant_emails = email_filter.filter_relevant_emails(emails)
     print(f"   Found {len(emails)} emails, {len(relevant_emails)} deemed relevant.")
     
