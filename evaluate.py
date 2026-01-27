@@ -113,8 +113,16 @@ def run_evaluation():
             
             # Run RAG
             start_time = time.time()
-            prediction = rag.answer_question(q)
+            # Get detailed result including sources for MLOps visibility
+            result = rag.answer_question(q, return_sources=True)
             latency = time.time() - start_time
+            
+            if isinstance(result, dict):
+                prediction = result["answer"]
+                sources = result["sources"]
+            else:
+                prediction = result
+                sources = []
             
             # Run Judge
             score = llm_judge(judge_client, config.gemini_model, q, truth, prediction)
@@ -124,6 +132,17 @@ def run_evaluation():
             
             total_score += score
             total_latency += latency
+            
+            # Log detailed trace as artifact for debugging
+            trace = {
+                "question": q,
+                "ground_truth": truth,
+                "prediction": prediction,
+                "score": score,
+                "latency": latency,
+                "retrieved_sources": sources
+            }
+            mlflow.log_dict(trace, f"traces/q_{q[:10].replace(' ', '_')}.json")
 
         # Calculate Aggregates
         avg_score = total_score / len(eval_dataset)

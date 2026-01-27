@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
@@ -19,6 +19,7 @@ class EmailMessage:
     date: datetime
     is_relevant: bool = False
     account_type: str = "personal"
+    labels: List[str] = field(default_factory=list)
 
 @dataclass
 class CalendarEvent:
@@ -55,7 +56,7 @@ class EmailAssistantConfig:
             self.use_mock_data = True
         elif self.env == Environment.DEV:
             self.chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
-            self.use_mock_data = True
+            self.use_mock_data = os.getenv("USE_MOCK_DATA", "false").lower() == "true"
         else: # PROD
             self.chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
             self.use_mock_data = False

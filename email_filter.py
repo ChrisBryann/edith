@@ -73,7 +73,10 @@ class EmailFilter:
         return any(keyword.lower() in subject_lower for keyword in self.important_subjects)
     
     def _is_recent_email(self, date: datetime) -> bool:
-        thirty_days_ago = datetime.now() - timedelta(days=30)
+        now = datetime.now()
+        if date.tzinfo:
+            now = now.astimezone()
+        thirty_days_ago = now - timedelta(days=30)
         return date > thirty_days_ago
     
     def _is_spam(self, email: EmailMessage) -> bool:
@@ -84,7 +87,8 @@ class EmailFilter:
         
         # Check sender for spam patterns
         sender_lower = email.sender.lower()
-        if any(pattern in sender_lower for pattern in ['noreply', 'no-reply', 'marketing']):
+        # Removed 'noreply' as it is often used for receipts/tickets
+        if any(pattern in sender_lower for pattern in ['marketing']):
             return True
         
         # Check if email has many recipients (likely marketing)

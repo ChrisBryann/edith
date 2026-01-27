@@ -165,8 +165,22 @@ def run_rag_test():
             else:
                 print(f"   ⚠️  CHECK MANUALLY (Expected: {case['expected']})")
 
+        # Test Case 6: Audio Transcription (Mock)
+        print(f"\n   Test Case 6: Audio Transcription (Connectivity Check)")
+        try:
+            # Create dummy mp3 header bytes
+            dummy_audio = b'\xFF\xF3\x44\xC4' + b'\x00' * 100
+            transcript = rag.transcribe_audio(dummy_audio)
+            print(f"   A: [Transcript Length: {len(transcript)}] {transcript[:50]}...")
+            # We expect Gemini to either try to transcribe or complain about the file format, 
+            # but NOT throw a connection error.
+            print("   ✅ PASS (API Connected)")
+            passed_count += 1
+        except Exception as e:
+            print(f"   ❌ FAIL: {e}")
+
         print("\n" + "=" * 60)
-        print(f"Test Summary: {passed_count}/{len(test_cases)} tests passed automated checks.")
+        print(f"Test Summary: {passed_count}/{len(test_cases) + 1} tests passed automated checks.")
         
     except Exception as e:
         print(f"\n❌ Error running tests: {e}")

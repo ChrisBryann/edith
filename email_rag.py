@@ -1,7 +1,7 @@
 import chromadb
 from google import genai
 from google.genai import types
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 
 from config import EmailMessage, EmailAssistantConfig
@@ -75,13 +75,22 @@ class EmailRAGSystem:
             print(f"Error searching emails: {e}")
             return []
     
-    def answer_question(self, question: str, additional_context: str = "") -> str:
+    def answer_question(self, question: str, additional_context: str = "", return_sources: bool = False) -> Union[str, Dict[str, Any]]:
         """Answer a user's question using RAG"""
+        print(f"   [RAG] Querying vector DB for: '{question}'")
         # Search for relevant emails
         search_results = self.search_emails(question, n_results=3)
         
+        if search_results:
+            print(f"   [RAG] Retrieved {len(search_results)} context documents:")
+            for res in search_results:
+                print(f"      - {res['metadata']['subject']} (Score: {res.get('distance', 0):.4f})")
+        
         if not search_results and not additional_context:
-            return "I couldn't find any relevant emails to answer your question."
+            msg = "I couldn't find any relevant emails to answer your question."
+            if return_sources:
+                return {"answer": msg, "sources": [], "context_used": ""}
+            return msg
         
         # Build context from search results
         email_context = "No relevant emails found."
@@ -112,12 +121,22 @@ Question: {question}"""
                     temperature=0.3,  # Lower temperature for more factual answers
                 )
             )
+            
+            if return_sources:
+                return {
+                    "answer": response.text,
+                    "sources": search_results,
+                    "context_used": email_context
+                }
             return response.text
         except Exception as e:
             print(f"Error generating answer: {e}")
             if "404" in str(e) and "models/" in str(e):
                 print(f"⚠️  Tip: Try setting GEMINI_MODEL='gemini-2.5-flash' in your .env file.")
-            return "I'm having trouble processing your question right now."
+            msg = "I'm having trouble processing your question right now."
+            if return_sources:
+                return {"answer": msg, "sources": [], "context_used": ""}
+            return msg
     
     def get_email_summary(self, days: int = 7) -> str:
         """Get a summary of recent emails"""

@@ -41,9 +41,13 @@ EDITH_ENV=dev
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing one
-3. Enable Gmail API and Google Calendar API
-4. Create OAuth 2.0 credentials
-5. Download the credentials JSON file and save it as `credentials.json`
+3. **Configure OAuth Consent Screen**:
+   - Go to **APIs & Services** > **OAuth consent screen**.
+   - Select **External** user type.
+   - **Crucial**: Under **Test users**, click **Add Users** and add your specific Gmail address.
+4. Enable Gmail API and Google Calendar API
+5. Create OAuth 2.0 credentials (select **Desktop app**)
+6. Download the credentials JSON file and save it as `credentials.json`
 
 ### 4. Run the Application
 

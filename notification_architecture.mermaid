@@ -1,0 +1,21 @@
+graph TD
+    subgraph "Edith Proactive Engine"
+        Scheduler[Notification Service]
+        Cal[Calendar Service]
+        State[Notified Events Cache]
+    end
+    
+    subgraph "External"
+        G_CAL[Google Calendar API]
+    end
+    
+    subgraph "Client"
+        UI[Chat Client / Mobile App]
+    end
+
+    Scheduler -- "1. Poll (Every 60s)" --> Cal
+    Cal -- "2. Fetch Events" --> G_CAL
+    G_CAL -- "3. Event Data" --> Cal
+    Scheduler -- "4. Check Time < 15m" --> State
+    State -- "5. If New" --> Scheduler
+    Scheduler -- "6. Push Notification" --> UI

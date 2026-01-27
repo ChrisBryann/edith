@@ -1,8 +1,9 @@
 import os
+import shutil
 from dotenv import load_dotenv
 
 # Import our modular services
-from config import EmailAssistantConfig
+from config import EmailAssistantConfig, Environment
 from gmail_service import GmailService
 from calendar_service import CalendarService
 from email_rag import EmailRAGSystem
@@ -14,11 +15,18 @@ def main():
     print("🤖 Initializing Edith (CLI Mode)...")
 
     config = EmailAssistantConfig()
+    print(f"   🌍 Environment: {config.env.value}")
+    print(f"   🎭 Mock Data: {config.use_mock_data}")
     
     # Check for API Key
     if not config.gemini_api_key:
         print("❌ Error: GEMINI_API_KEY not found in environment variables.")
         return
+
+    # Clear DB for fresh start in CLI mode (only in DEV)
+    if config.env == Environment.DEV and os.path.exists(config.chroma_db_path):
+        print(f"🧹 Clearing existing database at {config.chroma_db_path}...")
+        shutil.rmtree(config.chroma_db_path)
 
     # 2. Initialize Services
     gmail_service = GmailService(config)
@@ -30,6 +38,12 @@ def main():
     print("\n🔐 Authenticating with Google...")
     if gmail_service.authenticate():
         print("   ✅ Gmail Authenticated")
+        
+        # Fetch and configure email account (Critical for CalendarService)
+        user_email = gmail_service.get_profile_email()
+        config.add_email_account(user_email, is_primary=True)
+        print(f"   📧 Logged in as: {user_email}")
+
         # Share credentials with Calendar
         if gmail_service.creds:
             calendar_service.authenticate(gmail_service.creds)
@@ -40,7 +54,8 @@ def main():
 
     # 4. Sync Data (Optional for CLI demo)
     print("\n📨 Fetching recent emails...")
-    emails = gmail_service.get_emails(max_results=20)
+    # Fetching 100 emails from the last 30 days (filtering at API level for efficiency)
+    emails = gmail_service.get_emails(max_results=100, query="newer_than:30d")
     relevant_emails = email_filter.filter_relevant_emails(emails)
     print(f"   Found {len(emails)} emails, {len(relevant_emails)} deemed relevant.")
     

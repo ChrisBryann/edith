@@ -1,4 +1,5 @@
 import uvicorn
+import asyncio
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from typing import List, Optional
@@ -7,6 +8,7 @@ import os
 from config import EmailAssistantConfig, EmailMessage, CalendarEvent
 from gmail_service import GmailService
 from calendar_service import CalendarService
+from notification_service import NotificationService
 from email_rag import EmailRAGSystem
 from email_filter import EmailFilter
 
@@ -20,6 +22,7 @@ app = FastAPI(
 config = EmailAssistantConfig()
 gmail_service = GmailService(config)
 calendar_service = CalendarService(config)
+notification_service = NotificationService(calendar_service)
 email_filter = EmailFilter()
 rag_system = None  # Initialized on startup
 
@@ -59,10 +62,18 @@ async def startup_event():
     try:
         if gmail_service.authenticate():
             print("Gmail authenticated.")
+            
+            # Auto-configure primary email
+            user_email = gmail_service.get_profile_email()
+            config.add_email_account(user_email, is_primary=True)
+            
             # Share credentials with Calendar Service
             if gmail_service.creds:
                 calendar_service.authenticate(gmail_service.creds)
                 print("Calendar authenticated.")
+                
+                # Start background notification service
+                asyncio.create_task(notification_service.start_monitoring())
     except Exception as e:
         print(f"Startup authentication warning: {e}")
 
