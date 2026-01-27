@@ -1,0 +1,22 @@
+graph TD
+    User[User / Client]
+    
+    subgraph "Edith Ingestion Pipeline"
+        API[FastAPI / Scheduler]
+        Gmail[Gmail Service]
+        Filter[Email Filter]
+        RAG[RAG System]
+        DB[(ChromaDB)]
+    end
+    
+    subgraph "Google Workspace"
+        G_API[Gmail API]
+    end
+
+    User -- "Trigger Sync" --> API
+    API -- "Poll (historyId)" --> Gmail
+    Gmail -- "Fetch Changes" --> G_API
+    G_API -- "New Emails" --> Gmail
+    Gmail -- "Parsed Emails" --> Filter
+    Filter -- "Relevant Emails" --> RAG
+    RAG -- "Generate Embeddings" --> DB
