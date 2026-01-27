@@ -98,7 +98,7 @@ If running `api.py`, the following endpoints are available:
 
 ## 🧪 Testing
 
-### Run Integration Tests
+### Run RAG Integration Test
 Uses dummy data to verify the RAG pipeline without hitting real APIs.
 
 ```bash

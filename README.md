@@ -4,7 +4,9 @@ Edith is a strategic personal assistant designed to aggregate your digital life 
 
 Instead of searching through dozens of threads, simply ask:
 > *"What is the deadline for Project Phoenix?"*
+>
 > *"Summarize the emails from the marketing team this week."*
+>
 > *"Do I have any conflicts with the team meeting on Friday?"*
 
 Edith uses **RAG (Retrieval Augmented Generation)** to securely index your data and **Google Gemini** to provide intelligent, context-aware answers.
@@ -26,7 +28,7 @@ If you want to run Edith, contribute code, or understand how to set up the envir
 ### System Architecture
 Interested in the technical design, data flows, and RAG implementation details?
 
-👉 **Read assets/DESIGN.md**
+👉 **[Read DESIGN.md](DESIGN.md)**
 
 ## Development Roadmap
 
