@@ -2,7 +2,7 @@ import re
 from typing import List
 from datetime import datetime, timedelta
 
-from core.models import EmailMessage
+from models import EmailMessage
 
 class EmailFilter:
     def __init__(self):

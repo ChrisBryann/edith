@@ -1,0 +1,109 @@
+# Developer Onboarding
+
+Welcome to the Edith project! This guide will help you set up your development environment and understand how to work with the codebase.
+
+## 🛠️ Prerequisites
+
+- Python 3.9+
+- Docker & Docker Compose (optional, for containerized dev)
+- A Google Cloud Project with Gmail & Calendar APIs enabled
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GMAIL_CREDENTIALS_PATH=credentials.json
+CHROMA_DB_PATH=./chroma_db
+GEMINI_MODEL=gemini-2.5-flash
+EDITH_ENV=dev
+```
+
+### 3. Google API Setup
+
+1. Go to Google Cloud Console.
+2. Create a new project.
+3. **Enable APIs**: Search for and enable "Gmail API" and "Google Calendar API".
+4. **Configure OAuth Consent Screen**:
+   - Select **External** user type.
+   - Add your email address to **Test users**.
+5. **Create Credentials**:
+   - Go to Credentials > Create Credentials > OAuth client ID.
+   - Application type: **Desktop app**.
+   - Download the JSON file, rename it to `credentials.json`, and place it in the project root.
+
+### 4. Running the Application
+
+#### CLI Mode (Interactive Chat)
+This is the easiest way to test the RAG system with your real data.
+
+```bash
+python main.py
+```
+
+#### API Mode (Backend Server)
+Starts the FastAPI server for external integrations.
+
+```bash
+python api.py
+```
+Access docs at: `http://localhost:8000/docs`
+
+---
+
+## 🐳 Docker Development
+
+You can run Edith in a container to ensure a consistent environment.
+
+**Note**: Authenticate locally first (`python main.py`) to generate `token.json`. Docker will use this token to skip browser authentication.
+
+### Run Interactive CLI
+To chat with Edith inside Docker:
+
+```bash
+docker compose run --rm app python main.py
+```
+
+### Run API Server
+To start the backend service:
+
+```bash
+docker compose up
+```
+
+---
+
+## 📡 API Reference
+
+If running `api.py`, the following endpoints are available:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/sync-emails` | Triggers a background sync of recent emails. |
+| `POST` | `/ask-question` | Asks a question to the RAG system. JSON body: `{"question": "..."}` |
+| `GET` | `/email-summary` | Returns a summary of emails from the last N days. |
+| `GET` | `/calendar-events` | Lists upcoming calendar events. |
+| `POST` | `/transcribe` | Upload an audio file for transcription. |
+
+---
+
+## 🧪 Testing
+
+### Run Integration Tests
+Uses dummy data to verify the RAG pipeline without hitting real APIs.
+
+```bash
+python test_mvp.py
+```
+
+### Troubleshooting
+If you see `404` errors regarding models, check your API key permissions or run `python list_models.py` (if available) to see accessible Gemini models.

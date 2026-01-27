@@ -1,10 +1,14 @@
 import os
 import shutil
+import sys
 from dotenv import load_dotenv
 
+# Add the current directory to Python path to ensure modules can be found
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 # Import our modular services
-from core.config import EmailAssistantConfig
-from core.models import Environment
+from config import EmailAssistantConfig
+from models import Environment
 from services.email.fetcher import EmailFetcher
 from services.calendar.service import CalendarService
 from services.email.rag import EmailRAGSystem
@@ -69,16 +73,20 @@ def main():
     print("-" * 50)
     
     while True:
-        query = input("\nYou: ")
-        if query.lower() in ['exit', 'quit']:
+        try:
+            query = input("\nYou: ")
+            if query.lower() in ['exit', 'quit']:
+                break
+            
+            # Fetch fresh calendar context for every question
+            events = calendar_service.get_events(days_ahead=7)
+            calendar_context = "\n".join([f"- {e.title} at {e.start_time}" for e in events])
+            
+            response = rag_system.answer_question(query, additional_context=calendar_context)
+            print(f"Edith: {response}")
+        except KeyboardInterrupt:
+            print("\n\n👋 Exiting...")
             break
-        
-        # Fetch fresh calendar context for every question
-        events = calendar_service.get_events(days_ahead=7)
-        calendar_context = "\n".join([f"- {e.title} at {e.start_time}" for e in events])
-        
-        response = rag_system.answer_question(query, additional_context=calendar_context)
-        print(f"Edith: {response}")
 
 if __name__ == "__main__":
     main()

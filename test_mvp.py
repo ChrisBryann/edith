@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 # Add the current directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from core.config import EmailAssistantConfig
-from core.models import EmailMessage
+from config import EmailAssistantConfig
+from models import EmailMessage
 from services.email.rag import EmailRAGSystem
 
 def get_dummy_data() -> List[EmailMessage]:
