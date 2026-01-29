@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
 import os
 import shutil
 import time
 from datetime import datetime, timedelta
 from typing import List
 from dotenv import load_dotenv
-
-# Add the current directory to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config import EmailAssistantConfig
 from models import EmailMessage

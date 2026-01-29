@@ -4,10 +4,6 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 from typing import List, Optional
 import os
-import sys
-
-# Add the current directory to Python path to ensure modules can be found
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config import EmailAssistantConfig
 from models import CalendarEvent
