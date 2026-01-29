@@ -76,11 +76,11 @@ class EmailRAGSystem:
             print(f"Error searching emails: {e}")
             return []
     
-    def answer_question(self, question: str, additional_context: str = "", return_sources: bool = False) -> Union[str, Dict[str, Any]]:
+    def answer_question(self, question: str, additional_context: str = "", return_sources: bool = False, n_results: int = 5) -> Union[str, Dict[str, Any]]:
         """Answer a user's question using RAG"""
         print(f"   [RAG] Querying vector DB for: '{question}'")
         # Search for relevant emails
-        search_results = self.search_emails(question, n_results=3)
+        search_results = self.search_emails(question, n_results=n_results)
         
         if search_results:
             print(f"   [RAG] Retrieved {len(search_results)} context documents:")
