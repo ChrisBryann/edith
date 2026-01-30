@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from google.oauth2.credentials import Credentials
 import wsgiref.simple_server
 
-from services.email.models import EmailMessage
+from lib.shared.models import EmailMessage
 from config import EmailAssistantConfig
 
 class GmailService:

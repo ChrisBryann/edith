@@ -1,6 +1,6 @@
 from typing import List
 from config import EmailAssistantConfig
-from services.email.models import EmailMessage
+from lib.shared.models import EmailMessage
 from services.email.providers.gmail import GmailService
 
 class EmailFetcher:
