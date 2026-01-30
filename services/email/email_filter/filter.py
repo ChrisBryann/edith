@@ -2,31 +2,25 @@ import re
 from typing import List
 from datetime import datetime, timedelta
 
-from lib.shared.models import EmailMessage
+from .constants import SPAM_KEYWORDS, IMPORTANT_SENDERS, IMPORTANT_SUBJECTS, LIST_HEADER_KEYS
+from .helpers import contains_any_keyword, clamp01, recency_score
+
+from lib.shared.models import EmailMessage, EmailFilterScore
 
 class EmailFilter:
-    def __init__(self):
-        self.spam_keywords = [
-            'unsubscribe', 'promotion', 'sale', 'discount', 'offer', 'deal',
-            'marketing', 'newsletter', 'advertisement', 'sponsored', 'free trial'
-        ]
-        
-        self.important_senders = [
-            # Users can customize this list
-        ]
-        
-        self.important_subjects = [
-            'meeting', 'deadline', 'urgent', 'important', 'assignment',
-            'project', 'schedule', 'appointment', 'interview'
-        ]
-    
-    def filter_relevant_emails(self, emails: List[EmailMessage]) -> List[EmailMessage]:
+    def filter_relevant_emails(self, emails: List[EmailMessage], user_primary_email: str) -> List[EmailMessage]:
         relevant_emails = []
         
+        # for email in emails:
+        #     if self._is_relevant(email):
+        #         email.is_relevant = True
+        #         relevant_emails.append(email)
+        
         for email in emails:
-            if self._is_relevant(email):
+            score = self.score_email(email, now=datetime.now(), user_email=user_primary_email, vip_senders=IMPORTANT_SENDERS, known_senders={})
+            if score.bucket != 'other':
                 email.is_relevant = True
-                relevant_emails.append(email)
+                relevant_emails.append(email)    
         
         return relevant_emails
     
@@ -64,13 +58,84 @@ class EmailFilter:
         
         return False
     
+    def score_email(
+        self,
+        email: EmailMessage,
+        *,
+        now: datetime,
+        user_email: str,
+        vip_senders: set[str] = frozenset(),
+        known_senders: set[str] = frozenset() # optional: from address book/history
+        ) -> EmailFilterScore:
+        
+        reasons = []
+        score = 0.0
+        
+        # VIP sender
+        if email.sender.lower() in {s.lower() for s in vip_senders}:
+            score += 0.35
+            reasons.append("From a VIP sender")
+            
+        # Directness: sent to user (not huge recipient list)
+        direct_to_user = user_email.lower() in {e.lower() for e in email.to_emails}
+        many_recipients = len(email.to_emails) + len(email.cc_emails) >= 6 # TODO: this value can change
+        if direct_to_user and not many_recipients:
+            score += 0.20
+            reasons.append("Directly addressed to you")
+         # Unread
+        if email.is_unread:
+            score += 0.10
+            reasons.append("Unread")
+
+        # Recency
+        r = recency_score(email.received_at, now)
+        score += 0.15 * r
+        if r >= 0.8:
+            reasons.append("Recent")
+
+        # Keywords
+        text = f"{email.subject}\n{email.snippet}\n{email.body_text or ''}"
+        if contains_any_keyword(text, IMPORTANT_SUBJECTS):
+            score += 0.20
+            reasons.append("Contains important keywords")
+
+        # Known sender (optional) -> important senders
+        if email.sender.lower() in {s.lower() for s in known_senders}:
+            score += 0.10
+            reasons.append("Known sender")
+
+        # Negative signals
+        if self._is_mailing_list(email.headers):
+            score -= 0.25
+            reasons.append("Looks like a mailing list/newsletter")
+
+        # Filter out explicit Promotions and Social categories
+        if (email.labels and 'CATEGORY_PROMOTIONS' in email.labels or 'CATEGORY_SOCIAL' in email.labels):
+            score -= 0.10
+            reasons.append("Looks promotional")
+
+        score = clamp01(score)
+        
+        # If Spam, rule it out TODO: should I immediately zero it out?
+        if contains_any_keyword(text, SPAM_KEYWORDS):
+            score = 0.0
+
+        # Bucket thresholds TODO: (tune these)
+        if score >= 0.75:
+            bucket = "important"
+        elif score >= 0.45:
+            bucket = "relevant"
+        else:
+            bucket = "other"
+
+        return EmailFilterScore(email_id=email.id, score=score, bucket=bucket, reasons=reasons)
+    
+    
     def _is_important_sender(self, sender: str) -> bool:
-        sender_lower = sender.lower()
-        return any(keyword.lower() in sender_lower for keyword in self.important_senders)
+        return contains_any_keyword(sender, IMPORTANT_SENDERS)
     
     def _contains_important_keywords(self, subject: str) -> bool:
-        subject_lower = subject.lower()
-        return any(keyword.lower() in subject_lower for keyword in self.important_subjects)
+        return contains_any_keyword(subject, IMPORTANT_SUBJECTS)
     
     def _is_recent_email(self, date: datetime) -> bool:
         now = datetime.now()
@@ -81,26 +146,23 @@ class EmailFilter:
     
     def _is_spam(self, email: EmailMessage) -> bool:
         # Check subject for spam keywords
-        subject_lower = email.subject.lower()
-        if any(keyword.lower() in subject_lower for keyword in self.spam_keywords):
+        if contains_any_keyword(email.subject, SPAM_KEYWORDS):
             return True
         
         # Check sender for spam patterns
-        sender_lower = email.sender.lower()
         # Removed 'noreply' as it is often used for receipts/tickets
-        if any(pattern in sender_lower for pattern in ['marketing']):
+        if contains_any_keyword(email.sender, {"marketing"}):
             return True
         
         # Check if email has many recipients (likely marketing)
         # This would require additional parsing of headers
         
         # Check body for common marketing footers (Universal fallback for non-Gmail)
-        body_lower = email.body.lower()
-        if 'unsubscribe' in body_lower or 'view in browser' in body_lower or 'update preferences' in body_lower:
+        if contains_any_keyword(email.body, {'unsubscribe', 'view in browser', 'update preferences'}):
             return True
         
         return False
-    
+
     def _contains_important_content(self, body: str) -> bool:
         body_lower = body.lower()
         
@@ -118,10 +180,18 @@ class EmailFilter:
         
         return False
     
+    def _is_mailing_list(headers: dict) -> bool:
+        """Is email part of mailing list"""
+        keys = {k.lower() for k in headers.keys()}
+        if keys & LIST_HEADER_KEYS:
+            return True
+        prec = headers.get("Precedence") or headers.get("precedence")
+        return (prec or "").lower() in {"bulk", "list", "junk"}
+    
     def add_important_sender(self, sender: str):
-        if sender not in self.important_senders:
-            self.important_senders.append(sender)
+        if sender not in IMPORTANT_SENDERS:
+            IMPORTANT_SENDERS.append(sender)
     
     def add_important_subject_keyword(self, keyword: str):
-        if keyword not in self.important_subjects:
-            self.important_subjects.append(keyword)
+        if keyword not in IMPORTANT_SUBJECTS:
+            IMPORTANT_SUBJECTS.append(keyword)

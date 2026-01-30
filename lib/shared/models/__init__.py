@@ -1,1 +1,1 @@
-from .email import EmailConfig, EmailMessage
+from .email import EmailConfig, EmailMessage, EmailFilterScore

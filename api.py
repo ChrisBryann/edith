@@ -116,14 +116,15 @@ async def add_email_account(account: EmailAccountRequest, config: EmailAssistant
     return {"status": "success", "message": f"Added {account.email_address}"}
 
 @app.post("/sync-emails")
-async def sync_emails(background_tasks: BackgroundTasks, email_fetcher: EmailFetcher = Depends(get_email_fetcher), email_filter: EmailFilter = Depends(get_email_filter), rag_system: EmailRAGSystem = Depends(get_rag_system)):
+async def sync_emails(background_tasks: BackgroundTasks, email_fetcher: EmailFetcher = Depends(get_email_fetcher), email_filter: EmailFilter = Depends(get_email_filter), rag_system: EmailRAGSystem = Depends(get_rag_system), config: EmailAssistantConfig = Depends(get_config)):
     if not email_fetcher.creds: # Check auth status
         raise HTTPException(status_code=401, detail="Service not authenticated")
-
+    
+    user_primary_email = config.get_primary_email()
     def process_sync():
         print("Starting background sync...")
         emails = email_fetcher.get_emails(max_results=50)
-        relevant = email_filter.filter_relevant_emails(emails)
+        relevant = email_filter.filter_relevant_emails(emails, user_primary_email)
         if relevant:
             rag_system.index_emails(relevant)
         print(f"Synced {len(relevant)} relevant emails out of {len(emails)} fetched.")
