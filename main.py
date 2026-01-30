@@ -1,10 +1,6 @@
 import os
 import shutil
-import sys
 from dotenv import load_dotenv
-
-# Add the current directory to Python path to ensure modules can be found
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import our modular services
 from config import EmailAssistantConfig

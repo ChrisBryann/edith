@@ -30,6 +30,9 @@ EDITH_ENV=dev
 
 ### 3. Google API Setup
 
+> **⚠️ Security Warning**
+> **Never commit `credentials.json` or `token_*.json` files to a public repository.** These files should be listed in your `.gitignore`.
+
 1. Go to Google Cloud Console.
 2. Create a new project.
 3. **Enable APIs**: Search for and enable "Gmail API" and "Google Calendar API".
@@ -37,9 +40,16 @@ EDITH_ENV=dev
    - Select **External** user type.
    - Add your email address to **Test users**.
 5. **Create Credentials**:
-   - Go to Credentials > Create Credentials > OAuth client ID.
-   - Application type: **Desktop app**.
+   - Go to **Credentials > Create Credentials > OAuth client ID**.
+   - **Application type**: Desktop app.
    - Download the JSON file, rename it to `credentials.json`, and place it in the project root.
+
+#### 👥 Collaborating with a Team
+If a friend is developing with you, they do **not** need to create a new Google Cloud Project.
+
+1. **Add them as a Test User**: Go to **OAuth consent screen** > **Test users** in your Google Cloud Console and add their email address.
+2. **Share `credentials.json`**: Securely send them this file.
+3. **Gemini API Key**: They can generate their own key or use yours.
 
 ### 4. Running the Application
 

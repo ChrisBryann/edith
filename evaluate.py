@@ -2,14 +2,10 @@ import os
 import time
 import mlflow
 import shutil
-import sys
 from dotenv import load_dotenv
 from typing import List, Dict
 from google import genai
 from google.genai import types
-
-# Add the current directory to Python path to ensure modules can be found
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import system components
 from config import EmailAssistantConfig
