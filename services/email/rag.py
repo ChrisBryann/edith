@@ -5,7 +5,7 @@ from google.genai import types
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 
-from models import EmailMessage
+from services.email.models import EmailMessage
 from config import EmailAssistantConfig
 from services.security.scrubber import PIIScrubber
 from services.security.encryption import DataEncryptor

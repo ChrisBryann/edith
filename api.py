@@ -12,7 +12,7 @@ from services.email.fetcher import EmailFetcher
 from services.calendar.service import CalendarService
 from services.notification.service import NotificationService
 from services.email.rag import EmailRAGSystem
-from services.email.filter import EmailFilter
+from services.email.email_filter import EmailFilter
 
 from helpers import *
 

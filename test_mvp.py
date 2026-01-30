@@ -8,7 +8,7 @@ from typing import List
 from dotenv import load_dotenv
 
 from config import EmailAssistantConfig
-from models import EmailMessage
+from services.email.models import EmailMessage
 from services.email.rag import EmailRAGSystem
 
 def get_dummy_data() -> List[EmailMessage]:

@@ -1,24 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import List
 from enum import Enum
-
-@dataclass
-class EmailConfig:
-    email_address: str
-    is_primary: bool = False
-    account_type: str = "personal"  # personal, work, school
-
-@dataclass
-class EmailMessage:
-    id: str
-    subject: str
-    sender: str
-    body: str
-    date: datetime
-    is_relevant: bool = False
-    account_type: str = "personal"
-    labels: List[str] = field(default_factory=list)
 
 @dataclass
 class CalendarEvent:
