@@ -1,4 +1,5 @@
 import chromadb
+from chromadb.utils import embedding_functions
 from google import genai
 from google.genai import types
 from typing import List, Dict, Any, Optional, Union
@@ -6,6 +7,8 @@ from datetime import datetime
 
 from models import EmailMessage
 from config import EmailAssistantConfig
+from services.security.scrubber import PIIScrubber
+from services.security.encryption import DataEncryptor
 
 class EmailRAGSystem:
     def __init__(self, config: EmailAssistantConfig):
@@ -18,6 +21,15 @@ class EmailRAGSystem:
             name="email_knowledge",
             metadata={"hnsw:space": "cosine"}
         )
+        
+        # Explicitly load embedding function so we can generate embeddings on plaintext
+        # before encrypting the content for storage.
+        self.embedding_fn = embedding_functions.DefaultEmbeddingFunction()
+        
+        # Initialize Privacy Scrubber
+        self.scrubber = PIIScrubber()
+        # Initialize At-Rest Encryption
+        self.encryptor = DataEncryptor(config.encryption_key)
     
     def index_emails(self, emails: List[EmailMessage]):
         """Index relevant emails in the vector database"""
@@ -35,20 +47,32 @@ class EmailRAGSystem:
                 Body: {email.body[:1000]}  # Limit body length for indexing
                 """
                 
-                documents.append(doc_text.strip())
+                # 1. Generate Embedding on PLAINTEXT (so search works)
+                # We do this later in batch, just preparing lists here
+                plain_doc = doc_text.strip()
+                documents.append(plain_doc)
+                
+                # 2. Prepare Metadata (Encrypt sensitive fields)
                 metadatas.append({
                     'email_id': email.id,
-                    'subject': email.subject,
-                    'sender': email.sender,
+                    'subject': self.encryptor.encrypt(email.subject),
+                    'sender': self.encryptor.encrypt(email.sender),
                     'date': email.date.isoformat(),
                     'account_type': email.account_type
                 })
                 ids.append(email.id)
         
         if documents:
+            # Generate embeddings on plaintext
+            embeddings = self.embedding_fn(documents)
+            
+            # 3. Encrypt Document Content for Storage
+            encrypted_documents = [self.encryptor.encrypt(doc) for doc in documents]
+            
             # Add to ChromaDB
             self.collection.upsert(
-                documents=documents,
+                documents=encrypted_documents,
+                embeddings=embeddings,
                 metadatas=metadatas,
                 ids=ids
             )
@@ -65,8 +89,14 @@ class EmailRAGSystem:
             if results['documents'] and results['documents'][0]:
                 for i, doc in enumerate(results['documents'][0]):
                     metadata = results['metadatas'][0][i]
+                    
+                    # Decrypt data for application use
+                    decrypted_doc = self.encryptor.decrypt(doc)
+                    metadata['subject'] = self.encryptor.decrypt(metadata['subject'])
+                    metadata['sender'] = self.encryptor.decrypt(metadata['sender'])
+                    
                     search_results.append({
-                        'document': doc,
+                        'document': decrypted_doc,
                         'metadata': metadata,
                         'distance': results['distances'][0][i] if 'distances' in results else 0
                     })
@@ -115,21 +145,27 @@ Email Context:
 
 Question: {question}"""
             
+            # --- Privacy Layer: Scrub PII before sending to LLM ---
+            scrubbed_prompt, pii_mapping = self.scrubber.scrub(prompt)
+            
             response = self.client.models.generate_content(
                 model=self.config.gemini_model,
-                contents=prompt,
+                contents=scrubbed_prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.3,  # Lower temperature for more factual answers
                 )
             )
             
+            # --- Privacy Layer: Restore PII in the response ---
+            final_answer = self.scrubber.restore(response.text, pii_mapping)
+            
             if return_sources:
                 return {
-                    "answer": response.text,
+                    "answer": final_answer,
                     "sources": search_results,
                     "context_used": email_context
                 }
-            return response.text
+            return final_answer
         except Exception as e:
             print(f"Error generating answer: {e}")
             if "404" in str(e) and "models/" in str(e):

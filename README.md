@@ -32,17 +32,14 @@ Interested in the technical design, data flows, and RAG implementation details?
 
 ## Development Roadmap
 
-### Phase 1: MVP (Current)
-- [x] Gmail integration
-- [x] Basic email filtering
-- [x] RAG system
-- [x] Google Calendar integration
-- [x] REST API
+We are currently transitioning from **MVP** to **Alpha Demo**.
 
-### Phase 2: Voice & Audio Intelligence
-- [ ] **Voice Interface**: Speech-to-Text (STT) and Text-to-Speech (TTS) for hands-free interaction
-- [ ] **Audio Ingestion**: Pipeline for recorded calls and meetings
-- [ ] **Transcription**: Auto-transcribe audio content for RAG indexing
+👉 **[View the Detailed Roadmap](ROADMAP.md)**
+
+### Upcoming Milestones
+- **Frontend UI**: A Streamlit-based web interface.
+- **ML Filtering**: Advanced noise reduction using TinyBERT.
+- **Demo Mode**: One-click setup with dummy data for user testing.
 
 ### Phase 3: Knowledge Base Expansion
 - [ ] **Notion Integration**: Index workspaces and pages

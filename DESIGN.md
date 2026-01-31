@@ -7,7 +7,7 @@ Edith follows a **Service-Oriented Architecture** wrapped in a FastAPI backend. 
 ### Ingestion Architecture
 ```mermaid
 graph TD
-    User[User / Client]
+    User[User]
     
     subgraph "Edith Ingestion Pipeline"
         API[FastAPI / Scheduler]
@@ -33,9 +33,11 @@ graph TD
 ### Query Architecture
 ```mermaid
 graph TD
-    User[User / Client]
+    User[User]
+    Web[Web UI]
+    Mobile[Mobile App]
     
-    subgraph "Edith Query Engine"
+    subgraph "Edith Backend (Home Base)"
         API[FastAPI]
         Cal[Calendar Service]
         RAG[RAG System]
@@ -47,7 +49,9 @@ graph TD
         LLM[Google Gemini]
     end
 
-    User -- "Ask Question" --> API
+    User --> Web
+    User --> Mobile
+    Web & Mobile -- "HTTP /ask-question" --> API
     
     %% Context Gathering
     API -- "Fetch Schedule" --> Cal

@@ -15,6 +15,7 @@ class EmailAssistantConfig:
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self.gmail_credentials_path = os.getenv("GMAIL_CREDENTIALS_PATH", "credentials.json")
         self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.encryption_key = os.getenv("EDITH_ENCRYPTION_KEY")
         
         # Environment Configuration
         if self.env == Environment.TEST:

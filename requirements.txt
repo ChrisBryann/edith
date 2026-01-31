@@ -9,3 +9,5 @@ google-genai
 python-dotenv
 python-multipart
 mlflow
+cryptography
+pytest

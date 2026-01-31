@@ -25,6 +25,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 GMAIL_CREDENTIALS_PATH=credentials.json
 CHROMA_DB_PATH=./chroma_db
 GEMINI_MODEL=gemini-2.5-flash
+EDITH_ENCRYPTION_KEY=  # Optional for dev (will auto-generate insecure key if missing)
 EDITH_ENV=dev
 ```
 
@@ -108,11 +109,23 @@ If running `api.py`, the following endpoints are available:
 
 ## 🧪 Testing
 
-### Run RAG Integration Test
-Uses dummy data to verify the RAG pipeline without hitting real APIs.
+We use `pytest` for automated testing.
+
+### Local Testing
 
 ```bash
-python test_mvp.py
+# Run all tests
+pytest
+
+# Run only offline tests (fast)
+pytest -m offline
+```
+
+### Docker Testing
+To run the test suite inside the Docker container:
+
+```bash
+docker compose run --rm api pytest
 ```
 
 ### Troubleshooting
