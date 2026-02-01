@@ -85,7 +85,7 @@ class EmailRAGSystem:
                 ids=ids
             )
     
-    def search_emails(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
+    def search_emails(self, query: str, n_results: int = 30) -> List[Dict[str, Any]]:
         """Search for relevant emails based on a query"""
         try:
             results = self.collection.query(
@@ -114,7 +114,7 @@ class EmailRAGSystem:
             print(f"Error searching emails: {e}")
             return []
     
-    def answer_question(self, question: str, additional_context: str = "", return_sources: bool = False, n_results: int = 5) -> Union[str, Dict[str, Any]]:
+    def answer_question(self, question: str, additional_context: str = "", return_sources: bool = False, n_results: int = 30) -> Union[str, Dict[str, Any]]:
         """Answer a user's question using RAG"""
         print(f"   [RAG] Querying vector DB for: '{question}'")
         # Search for relevant emails
@@ -143,7 +143,14 @@ class EmailRAGSystem:
         
         # Generate answer using Gemini
         try:
-            prompt = f"""You are an email assistant. Answer the user's question based on the provided email context. Be concise and helpful.
+            prompt = f"""You are Edith, an intelligent and helpful personal AI assistant.
+Your goal is to help the user manage their digital life by synthesizing information from their emails and calendar.
+
+Guidelines:
+1. **Tone**: Be conversational, warm, and professional (like Google Gemini). Avoid robotic or overly terse responses.
+2. **Accuracy**: Answer strictly based on the provided context. If the information is missing, politely say so.
+3. **Synthesis**: When asked about lists (e.g., "jobs applied to"), aggregate the information rather than just listing emails.
+4. **Transparency**: If you are summarizing a large number of items, mention that this is based on the most relevant emails found.
 
 Additional Context (Calendar/System):
 {additional_context}
@@ -188,7 +195,7 @@ Question: {question}"""
         # This would require date-based filtering in ChromaDB
         # For now, we'll get recent emails and filter them
         recent_query = f"emails from the last {days} days"
-        search_results = self.search_emails(recent_query, n_results=10)
+        search_results = self.search_emails(recent_query, n_results=30)
         
         if not search_results:
             return f"No relevant emails found in the last {days} days."

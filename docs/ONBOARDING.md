@@ -109,15 +109,16 @@ If running `api.py`, the following endpoints are available:
 
 ## 🧪 Testing
 
-We use `pytest` for automated testing.
+We use `pytest` for automated backend testing. Currently, UI testing is performed manually.
 
-### Local Testing
+### Backend Testing
+
+Our backend tests cover unit logic (offline) and integration with Google APIs (online).
+
+#### 1. Run Offline Tests (Fast)
+These tests use mock data and do not require Google credentials. Run this frequently during development.
 
 ```bash
-# Run all tests
-pytest
-
-# Run only offline tests (fast)
 pytest -m offline
 ```
 
