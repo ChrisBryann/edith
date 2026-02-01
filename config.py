@@ -1,6 +1,7 @@
 import os
 from typing import List
-from models import EmailConfig, Environment
+from models import Environment
+from lib.shared.models import EmailConfig
 
 class EmailAssistantConfig:
     def __init__(self):
@@ -16,6 +17,8 @@ class EmailAssistantConfig:
         self.gmail_credentials_path = os.getenv("GMAIL_CREDENTIALS_PATH", "credentials.json")
         self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         self.encryption_key = os.getenv("EDITH_ENCRYPTION_KEY")
+        
+        self.spam_detection_model_id = os.getenv("SPAM_DETECTION_MODEL_ID")
         
         # Environment Configuration
         if self.env == Environment.TEST:

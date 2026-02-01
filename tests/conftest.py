@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 from typing import List
 
 from config import EmailAssistantConfig
-from models import EmailMessage
+from lib.shared.models.email import EmailMessage
 from services.email.rag import EmailRAGSystem
+from lib.shared.llm.spam_service import SpamLLMService
 
 @pytest.fixture(scope="session")
 def test_config():
@@ -38,6 +39,16 @@ def rag_system(test_config):
     rag.index_emails(emails)
     
     return rag
+
+@pytest.fixture(scope="session")
+def spam_llm_service(test_config):
+    """Initializes the Spam Detection LLM service"""
+    if not test_config.spam_detection_model_id:
+        pytest.skip("SPAM_DETECTION_MODEL_ID not found in environment")
+    
+    service = SpamLLMService(test_config)
+    
+    return service
 
 @pytest.fixture(scope="session")
 def dummy_emails():
