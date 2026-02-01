@@ -4,6 +4,8 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, D
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import List, Optional
+from uuid import uuid4
+from services.email.routers import email_app
 import os
 
 from config import EmailAssistantConfig
@@ -22,7 +24,8 @@ from helpers import *
 async def startup_event(app: FastAPI):
     
     # Ensure configurations are initialized
-    app.state.config = EmailAssistantConfig()
+    # Create a unique ID for user when startup (temporary sol, in future we use local DB)
+    app.state.config = EmailAssistantConfig(user_id=uuid4().hex)
     
     # Ensure directories exist
     os.makedirs(app.state.config.chroma_db_path, exist_ok=True)
@@ -84,6 +87,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=startup_event
 )
+
+# Include email subrouter
+app.mount('/email', email_app)
 
 # --- Pydantic Models ---
 class EmailAccountRequest(BaseModel):

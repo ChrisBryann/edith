@@ -10,6 +10,7 @@ from email.utils import parsedate_to_datetime
 from bs4 import BeautifulSoup
 from google.oauth2.credentials import Credentials
 import wsgiref.simple_server
+from uuid import uuid4
 
 from models import EmailMessage
 from config import EmailAssistantConfig
@@ -22,13 +23,13 @@ class GmailService:
         self.SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 
                        'https://www.googleapis.com/auth/calendar.readonly']
         
-    def authenticate(self) -> bool:
+    def authenticate(self, token_filename: Optional[str]) -> bool:
         creds = None
         # Use a safe filename for the token
-        primary_email = self.config.get_primary_email()
-        token_filename = f"token_{primary_email}.json" if primary_email else "token.json"
+        # primary_email = self.config.get_primary_email()
+        # token_filename = f"token_{primary_email}.json" if primary_email else "token.json"
         
-        if os.path.exists(token_filename):
+        if token_filename and os.path.exists(token_filename):
             try:
                 creds = Credentials.from_authorized_user_file(token_filename, self.SCOPES)
             except Exception as e:
@@ -39,6 +40,8 @@ class GmailService:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
+                # Create a unique ID for this Gmail account
+                gmail_id = uuid4().hex
                 if not os.path.exists(self.config.gmail_credentials_path):
                     print(f"\n❌ Error: '{self.config.gmail_credentials_path}' not found.")
                     print("   Please download the OAuth 2.0 Client ID JSON from Google Cloud Console")
@@ -47,17 +50,17 @@ class GmailService:
 
                 flow = InstalledAppFlow.from_client_secrets_file(
                     self.config.gmail_credentials_path, self.SCOPES)
-                creds = self._authenticate_headless(flow, port=8080)
-                
+                creds, state_code = self._authenticate_headless(flow, port=8080, state=gmail_id)
             # Save the credentials for the next run
-            with open(token_filename, 'w') as token:
-                token.write(creds.to_json())
-                
+                if not token_filename:
+                    token_filename = f"token_{state_code}.json"
+                with open(token_filename, 'w') as token:
+                    token.write(creds.to_json())
         self.creds = creds
         self.service = build('gmail', 'v1', credentials=creds)
         return True
     
-    def _authenticate_headless(self, flow, port=8080):
+    def _authenticate_headless(self, flow: InstalledAppFlow, port=8080):
         """
         Custom authentication flow for headless/Docker environments.
         Listens on 0.0.0.0 (for Docker) but tells Google to redirect to localhost.
@@ -71,9 +74,9 @@ class GmailService:
         print(f"3. The browser will redirect to localhost:{port}, which Docker will catch.")
         
         auth_code = None
-        
+        state_code: str = None
         def app(environ, start_response):
-            nonlocal auth_code
+            nonlocal auth_code, state_code
             query = environ.get('QUERY_STRING', '')
             params = {}
             for p in query.split('&'):
@@ -82,8 +85,10 @@ class GmailService:
                     params[k] = v
             
             code = params.get('code')
-            if code:
+            state = params.get('state')
+            if code and state:
                 auth_code = code
+                state_code = state
                 start_response('200 OK', [('Content-Type', 'text/html')])
                 return [b'<h1>Authentication Successful!</h1><p>You can close this window and return to the terminal.</p>']
             
@@ -96,13 +101,13 @@ class GmailService:
         # Suppress error logs from timeouts/pre-connects
         server.handle_error = lambda request, client_address: None
         
-        # Keep handling requests until we get the auth code
-        while auth_code is None:
+        # Keep handling requests until we get the auth code and state code (the gmail id to name the token file)
+        while auth_code is None or state_code is None:
             # handle_request may timeout if no connection, which is fine
             server.handle_request()
         
         flow.fetch_token(code=auth_code)
-        return flow.credentials
+        return flow.credentials, state_code
 
     def get_emails(self, max_results: int = 50, query: str = "newer_than:30d") -> List[EmailMessage]:
         if not self.service:

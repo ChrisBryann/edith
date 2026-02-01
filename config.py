@@ -3,13 +3,15 @@ from typing import List
 from models import EmailConfig, Environment
 
 class EmailAssistantConfig:
-    def __init__(self):
+    def __init__(self, user_id: str):
         # Determine Environment
         env_str = os.getenv("EDITH_ENV", "dev").lower()
         try:
             self.env = Environment(env_str)
         except ValueError:
             self.env = Environment.DEV
+            
+        self.user_id = user_id
 
         self.email_accounts: List[EmailConfig] = []
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
