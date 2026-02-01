@@ -1,0 +1,1 @@
+# This file makes 'edith' a Python package.

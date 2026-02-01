@@ -11,3 +11,7 @@ python-multipart
 mlflow
 cryptography
 pytest
+transformers
+torch
+streamlit
+requests

@@ -1,8 +1,8 @@
 import pytest
 import os
-from services.email.fetcher import EmailFetcher
-from services.email.filter import EmailFilter
-from services.email.rag import EmailRAGSystem
+from edith.services.email.fetcher import EmailFetcher
+from edith.services.email.filter import EmailFilter
+from edith.services.email.rag import EmailRAGSystem
 
 @pytest.mark.integration
 def test_live_gmail_integration(test_config):
@@ -33,7 +33,7 @@ def test_live_gmail_integration(test_config):
     # 3. Fetch Real Data
     print("\n   📨 Fetching last 5 emails from Gmail...")
     # Fetch a small batch to keep test fast
-    emails = fetcher.get_emails(max_results=5)
+    emails, _ = fetcher.get_emails(max_results=5)
     
     assert isinstance(emails, list), "Fetcher should return a list"
     

@@ -3,7 +3,7 @@ services:
   api:
     build: .
     container_name: edith_api
-    command: ["python", "-u", "api.py"]
+    command: ["python", "-u", "edith/api.py"]
     volumes:
       - .:/app
       - /app/.venv
@@ -16,12 +16,12 @@ services:
     tty: true
 
   # The Face: Streamlit Web Interface (Coming Soon)
-  # web:
-  #   build: .
-  #   command: ["streamlit", "run", "ui.py"]
-  #   ports:
-  #     - "8501:8501"
-  #   environment:
-  #     - API_URL=http://api:8000
-  #   depends_on:
-  #     - api
+  web:
+    build: .
+    command: ["streamlit", "run", "edith/ui.py"]
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      - api

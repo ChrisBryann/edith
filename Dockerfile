@@ -15,4 +15,4 @@ COPY . .
 ENV PYTHONPATH=/app
 
 # We use python -u to ensure print statements show up immediately in Docker logs
-CMD ["python", "-u", "api.py"]
+CMD ["python", "-u", "edith/api.py"]

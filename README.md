@@ -23,18 +23,18 @@ Edith uses **RAG (Retrieval Augmented Generation)** to securely index your data 
 ### For Developers
 If you want to run Edith, contribute code, or understand how to set up the environment, please read the **Onboarding Guide**.
 
-👉 **[Read ONBOARDING.md](ONBOARDING.md)**
+👉 **[Read docs/ONBOARDING.md](docs/ONBOARDING.md)**
 
 ### System Architecture
 Interested in the technical design, data flows, and RAG implementation details?
 
-👉 **[Read DESIGN.md](DESIGN.md)**
+👉 **[Read docs/DESIGN.md](docs/DESIGN.md)**
 
 ## Development Roadmap
 
 We are currently transitioning from **MVP** to **Alpha Demo**.
 
-👉 **[View the Detailed Roadmap](ROADMAP.md)**
+👉 **[View the Detailed Roadmap](docs/ROADMAP.md)**
 
 ### Upcoming Milestones
 - **Frontend UI**: A Streamlit-based web interface.
