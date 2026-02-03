@@ -14,6 +14,7 @@ from edith.services.calendar.service import CalendarService
 from edith.services.notification.service import NotificationService
 from edith.services.email.rag import EmailRAGSystem
 from edith.services.email.filter import EmailFilter
+from edith.services.security.guard import PromptGuard
 
 from edith.dependencies import *
 
@@ -35,6 +36,7 @@ async def startup_event(app: FastAPI):
         app.state.calendar_service = CalendarService(app.state.config)
         app.state.notification_service = NotificationService(app.state.calendar_service)
         app.state.email_filter = EmailFilter()
+        app.state.prompt_guard = PromptGuard()
         
         # initialize RAG system - check if Gemini API Key is defined from env
         if not app.state.config.gemini_api_key:
@@ -66,6 +68,7 @@ async def startup_event(app: FastAPI):
         app.state.notification_service = None
         app.state.email_filter = None
         app.state.rag_system = None
+        app.state.prompt_guard = None
         
         print('Services has been shutdown.')
         
@@ -133,7 +136,7 @@ async def add_email_account(account: EmailAccountRequest, config: EmailAssistant
     return {"status": "success", "message": f"Added {account.email_address}"}
 
 @app.post("/sync-emails")
-async def sync_emails(background_tasks: BackgroundTasks, email_fetcher: EmailFetcher = Depends(get_email_fetcher), email_filter: EmailFilter = Depends(get_email_filter), rag_system: EmailRAGSystem = Depends(get_rag_system)):
+async def sync_emails(background_tasks: BackgroundTasks, email_fetcher: EmailFetcher = Depends(get_email_fetcher), email_filter: EmailFilter = Depends(get_email_filter), rag_system: EmailRAGSystem = Depends(get_rag_system), prompt_guard: PromptGuard = Depends(get_prompt_guard)):
     if not email_fetcher.creds: # Check auth status
         raise HTTPException(status_code=401, detail="Service not authenticated")
 
@@ -164,10 +167,18 @@ async def sync_emails(background_tasks: BackgroundTasks, email_fetcher: EmailFet
                 if not emails:
                     break
                 
-                total_fetched += len(emails)
+                # Zero Trust Ingestion: Filter unsafe content immediately
+                safe_emails = []
+                for email in emails:
+                    if prompt_guard.validate(email.subject + " " + email.body):
+                        safe_emails.append(email)
+                    else:
+                        print(f"   🛡️ Security Alert: Dropped email '{email.subject[:30]}...' at ingestion.")
+                
+                total_fetched += len(safe_emails)
                 system_status.sync_message = f"Fetched {total_fetched} emails..."
                 
-                relevant = email_filter.filter_relevant_emails(emails)
+                relevant = email_filter.filter_relevant_emails(safe_emails)
                 if relevant:
                     rag_system.index_emails(relevant)
                     

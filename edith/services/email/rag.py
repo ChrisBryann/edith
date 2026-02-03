@@ -9,6 +9,7 @@ from edith.models import EmailMessage
 from edith.config import EmailAssistantConfig
 from edith.services.security.scrubber import PIIScrubber
 from edith.services.security.encryption import DataEncryptor
+from edith.services.security.guard import PromptGuard
 
 class EmailRAGSystem:
     def __init__(self, config: EmailAssistantConfig):
@@ -38,6 +39,8 @@ class EmailRAGSystem:
         self.scrubber = PIIScrubber()
         # Initialize At-Rest Encryption
         self.encryptor = DataEncryptor(config.encryption_key)
+        # Initialize Prompt Guard
+        self.prompt_guard = PromptGuard()
     
     def index_emails(self, emails: List[EmailMessage]):
         """Index relevant emails in the vector database"""
@@ -47,6 +50,11 @@ class EmailRAGSystem:
         
         for email in emails:
             if email.is_relevant:
+                # Security Check: Prompt Injection
+                if not self.prompt_guard.validate(email.subject + " " + email.body):
+                    print(f"   🛡️ Security Alert: Skipping email '{email.subject[:30]}...' due to potential prompt injection.")
+                    continue
+
                 # Create a searchable document
                 doc_text = f"""
                 Subject: {email.subject}
@@ -103,6 +111,11 @@ class EmailRAGSystem:
                     metadata['subject'] = self.encryptor.decrypt(metadata['subject'])
                     metadata['sender'] = self.encryptor.decrypt(metadata['sender'])
                     
+                    # Security Check: Filter out unsafe content on retrieval (Defense in Depth)
+                    if not self.prompt_guard.validate(decrypted_doc) or not self.prompt_guard.validate(metadata['subject']):
+                        print(f"   🛡️ Security Alert: Excluded retrieved document '{metadata['subject']}' due to potential prompt injection.")
+                        continue
+                    
                     search_results.append({
                         'document': decrypted_doc,
                         'metadata': metadata,
@@ -116,6 +129,14 @@ class EmailRAGSystem:
     
     def answer_question(self, question: str, additional_context: str = "", return_sources: bool = False, n_results: int = 30) -> Union[str, Dict[str, Any]]:
         """Answer a user's question using RAG"""
+        
+        # 1. Input Guard: Check the user's question for injection attempts
+        if not self.prompt_guard.validate(question):
+            msg = "I cannot answer this question as it triggered a security alert (Prompt Injection detected)."
+            if return_sources:
+                return {"answer": msg, "sources": [], "context_used": ""}
+            return msg
+            
         print(f"   [RAG] Querying vector DB for: '{question}'")
         # Search for relevant emails
         search_results = self.search_emails(question, n_results=n_results)
@@ -153,10 +174,14 @@ Guidelines:
 4. **Transparency**: If you are summarizing a large number of items, mention that this is based on the most relevant emails found.
 
 Additional Context (Calendar/System):
+<calendar_context>
 {additional_context}
+</calendar_context>
 
 Email Context:
+<email_context>
 {email_context}
+</email_context>
 
 Question: {question}"""
             
@@ -235,7 +260,13 @@ Emails:
                     prompt
                 ]
             )
-            return response.text
+            transcript = response.text
+            
+            # 2. Ingestion Guard: Check the generated transcript before returning/using it
+            if not self.prompt_guard.validate(transcript):
+                return "[Transcript Redacted: Security Alert - Potential Prompt Injection Detected]"
+                
+            return transcript
         except Exception as e:
             print(f"Error transcribing audio: {e}")
             return "Error processing audio file."

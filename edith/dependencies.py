@@ -5,6 +5,7 @@ from edith.services.email.filter import EmailFilter
 from edith.services.email.rag import EmailRAGSystem
 from edith.services.calendar.service import CalendarService
 from edith.services.notification.service import NotificationService
+from edith.services.security.guard import PromptGuard
 
 def get_config(request: Request) -> EmailAssistantConfig:
     return request.app.state.config
@@ -23,3 +24,6 @@ def get_notification_service(request: Request) -> NotificationService:
 
 def get_rag_system(request: Request) -> EmailRAGSystem:
     return request.app.state.rag_system
+
+def get_prompt_guard(request: Request) -> PromptGuard:
+    return request.app.state.prompt_guard
