@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from google.oauth2.credentials import Credentials
 import wsgiref.simple_server
 
-from edith.models import EmailMessage
+from edith.lib.shared.models.email import EmailMessage
 from edith.config import EmailAssistantConfig
 
 class GmailService:

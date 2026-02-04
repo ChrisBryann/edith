@@ -3,7 +3,7 @@ import logging
 from typing import List
 from datetime import datetime, timedelta
 
-from edith.models import EmailMessage
+from edith.lib.shared.models.email import EmailMessage
 
 logger = logging.getLogger(__name__)
 

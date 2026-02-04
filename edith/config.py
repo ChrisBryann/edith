@@ -1,6 +1,7 @@
 import os
 from typing import List
-from edith.models import EmailConfig, Environment
+from edith.lib.shared.models.email import EmailConfig
+from edith.models import Environment
 
 class EmailAssistantConfig:
     def __init__(self):
@@ -18,6 +19,10 @@ class EmailAssistantConfig:
         self.encryption_key = os.getenv("EDITH_ENCRYPTION_KEY")
         self.chroma_server_host = os.getenv("CHROMA_SERVER_HOST")
         self.chroma_server_port = int(os.getenv("CHROMA_SERVER_PORT", 8000))
+        
+        self.spam_detection_model_id = os.getenv("SPAM_DETECTION_MODEL_ID")
+        self.hf_token = os.getenv('HF_TOKEN')
+
         
         # Environment Configuration
         if self.env == Environment.TEST:

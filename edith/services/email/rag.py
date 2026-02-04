@@ -5,7 +5,7 @@ from google.genai import types
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 
-from edith.models import EmailMessage
+from edith.lib.shared.models.email import EmailMessage
 from edith.config import EmailAssistantConfig
 from edith.services.security.scrubber import PIIScrubber
 from edith.services.security.encryption import DataEncryptor
