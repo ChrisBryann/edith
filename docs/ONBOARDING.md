@@ -123,7 +123,7 @@ Our backend tests cover unit logic (offline) and integration with Google APIs (o
 
 #### Datasets
 
-Our test suite requires one or more datasets to be downloaded localld and placed in the `tests/datasets` folder.
+Our test suite requires one or more datasets to be downloaded locally and placed in the `tests/datasets` folder.
 
 Please download the following dataset and ensure it is named correctly:
 
