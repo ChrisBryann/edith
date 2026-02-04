@@ -13,7 +13,7 @@ from edith.services.email.fetcher import EmailFetcher
 from edith.services.calendar.service import CalendarService
 from edith.services.notification.service import NotificationService
 from edith.services.email.rag import EmailRAGSystem
-from edith.services.email.filter import EmailFilter
+from edith.services.email.email_filter.filter import EmailFilter
 from edith.services.security.guard import PromptGuard
 
 from edith.dependencies import *

@@ -7,6 +7,9 @@ venv/
 env/
 .pytest_cache/
 
+# Datasets (to be downloaded individually)
+tests/datasets/*
+
 # IDE
 .vscode/
 .idea/

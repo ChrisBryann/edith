@@ -46,6 +46,7 @@ EDITH_ENV=dev
    - Download the JSON file, rename it to `credentials.json`, and place it in the project root.
 
 #### 👥 Collaborating with a Team
+
 If a friend is developing with you, they do **not** need to create a new Google Cloud Project.
 
 1. **Add them as a Test User**: Go to **OAuth consent screen** > **Test users** in your Google Cloud Console and add their email address.
@@ -55,6 +56,7 @@ If a friend is developing with you, they do **not** need to create a new Google 
 ### 4. Running the Application
 
 #### CLI Mode (Interactive Chat)
+
 This is the easiest way to test the RAG system with your real data.
 
 ```bash
@@ -62,11 +64,13 @@ python -m edith.main
 ```
 
 #### API Mode (Backend Server)
+
 Starts the FastAPI server for external integrations.
 
 ```bash
 python -m edith.api
 ```
+
 Access docs at: `http://localhost:8000/docs`
 
 ---
@@ -78,6 +82,7 @@ You can run Edith in a container to ensure a consistent environment.
 **Note**: Authenticate locally first (`python -m edith.main`) to generate `token.json`. Docker will use this token to skip browser authentication.
 
 ### Run Interactive CLI
+
 To chat with Edith inside Docker:
 
 ```bash
@@ -85,6 +90,7 @@ docker compose run --rm api python -m edith.main
 ```
 
 ### Run API Server
+
 To start the backend service:
 
 ```bash
@@ -97,13 +103,13 @@ docker compose up
 
 If running `api.py`, the following endpoints are available:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/sync-emails` | Triggers a background sync of recent emails. |
-| `POST` | `/ask-question` | Asks a question to the RAG system. JSON body: `{"question": "..."}` |
-| `GET` | `/email-summary` | Returns a summary of emails from the last N days. |
-| `GET` | `/calendar-events` | Lists upcoming calendar events. |
-| `POST` | `/transcribe` | Upload an audio file for transcription. |
+| Method   | Endpoint             | Description                                                          |
+| -------- | -------------------- | -------------------------------------------------------------------- |
+| `POST` | `/sync-emails`     | Triggers a background sync of recent emails.                         |
+| `POST` | `/ask-question`    | Asks a question to the RAG system. JSON body:`{"question": "..."}` |
+| `GET`  | `/email-summary`   | Returns a summary of emails from the last N days.                    |
+| `GET`  | `/calendar-events` | Lists upcoming calendar events.                                      |
+| `POST` | `/transcribe`      | Upload an audio file for transcription.                              |
 
 ---
 
@@ -115,7 +121,20 @@ We use `pytest` for automated backend testing. Currently, UI testing is performe
 
 Our backend tests cover unit logic (offline) and integration with Google APIs (online).
 
+#### Datasets
+
+Our test suite requires one or more datasets to be downloaded localld and placed in the `tests/datasets` folder.
+
+Please download the following dataset and ensure it is named correctly:
+
+1. **High Accuracy Email Classifier Dataset**
+   Source: Hugging Face (jason23322)
+   Link: [https://huggingface.co/datasets/jason23322/high-accuracy-email-classifier/resolve/main/full_dataset.csv](https://huggingface.co/datasets/jason23322/high-accuracy-email-classifier/resolve/main/full_dataset.csv)
+
+   **After downloading, rename the file to `full_emails_dataset.csv`**
+
 #### 1. Run Offline Tests (Fast)
+
 These tests use mock data and do not require Google credentials. Run this frequently during development.
 
 ```bash
@@ -123,6 +142,7 @@ pytest -m offline
 ```
 
 ### Docker Testing
+
 To run the test suite inside the Docker container:
 
 ```bash
@@ -130,4 +150,5 @@ docker compose run --rm api pytest
 ```
 
 ### Troubleshooting
+
 If you see `404` errors regarding models, check your API key permissions or run `list_models.py` (if available) to see accessible Gemini models.

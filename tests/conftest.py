@@ -6,7 +6,7 @@ from typing import List, Dict
 
 from edith.config import EmailAssistantConfig
 from edith.services.email.rag import EmailRAGSystem
-from edith.services.email.email_filter.filter_dev import EmailFilter
+from edith.services.email.email_filter.filter import EmailFilter
 from tests.factories import get_dummy_data, get_dummy_live_data
 
 @pytest.fixture(scope="session")
