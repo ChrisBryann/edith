@@ -1,1 +1,1 @@
-from .filter import EmailFilter
+from .filter_dev import EmailFilter
