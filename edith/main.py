@@ -8,7 +8,7 @@ from edith.models import Environment
 from edith.services.email.fetcher import EmailFetcher
 from edith.services.calendar.service import CalendarService
 from edith.services.email.rag import EmailRAGSystem
-from edith.services.email.email_filter.filter import EmailFilter
+from edith.services.email.filter.filter import EmailFilter
 
 def main():
     # 1. Load Environment
