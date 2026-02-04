@@ -35,7 +35,7 @@ async def startup_event(app: FastAPI):
         app.state.email_fetcher = EmailFetcher(app.state.config)
         app.state.calendar_service = CalendarService(app.state.config)
         app.state.notification_service = NotificationService(app.state.calendar_service)
-        app.state.email_filter = EmailFilter()
+        app.state.email_filter = EmailFilter(app.state.config)
         app.state.prompt_guard = PromptGuard()
         
         # initialize RAG system - check if Gemini API Key is defined from env

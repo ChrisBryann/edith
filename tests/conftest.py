@@ -60,7 +60,7 @@ def dummy_live_emails():
 
 @pytest.fixture(scope="session")
 def dummy_single_email():
-    return get_dummy_data(1)[0] # only one
+    return get_dummy_live_data(1)[0] # only one
 
 @pytest.fixture(scope="session")
 def record(metrics: Dict, expected_is_spam: bool, predicted_is_spam: bool):

@@ -91,18 +91,18 @@ def get_dummy_data() -> List[EmailMessage]:
         )
     ]
     
-def get_dummy_live_data(limit : Optional[int]) -> List[EmailMessage]:
+def get_dummy_live_data(limit : Optional[int] = None) -> List[EmailMessage]:
     """Gets dummy live data from Huggingface dataset"""
     
     emails_df = pd.read_csv('tests/datasets/full_emails_dataset.csv')
     live_emails = []
     base_date = datetime.now()
     
-    _, rows = emails_df.iterrows()
-    limit = limit if limit is not None else len(rows)
+    iterrows = list(emails_df.iterrows())
+    limit = limit if limit is not None else len(iterrows)
     
     for i in range(limit):
-        row = rows[i]
+        _, row = iterrows[i]
         is_relevant = False if 1 <= row['category_id'] <= 3 else True # False if category is Promotions, Social Media, or Spam
         live_emails.append(EmailMessage(
             id=row['id'],

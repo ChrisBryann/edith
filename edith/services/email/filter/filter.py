@@ -3,7 +3,7 @@ import logging
 from typing import List
 from datetime import datetime, timedelta
 
-from .constants import SPAM_KEYWORDS, IMPORTANT_SENDERS, IMPORTANT_SUBJECTS, LIST_HEADER_KEYS
+from .constants import SPAM_KEYWORDS, IMPORTANT_SENDERS, IMPORTANT_SUBJECTS, LIST_HEADER_KEYS, ZERO_SHOT_SPAM_LABELS
 
 from edith.lib.shared.models import EmailMessage, EmailFilterScore
 from edith.config import EmailAssistantConfig
@@ -201,6 +201,18 @@ class EmailFilter:
         
         return False
 
+    def _is_spam_ml_zero_shot(self, email: EmailMessage) -> bool:
+        """Uses Zero Shot Classification with MNNLI to classify emails as spam or not"""
+        try:
+            
+            ml_results = self.spam_service.detect_spam_zero_shot(f'Subject: {email.subject}\n\n{email.body[:512]}')
+            
+            return ml_results.label in ZERO_SHOT_SPAM_LABELS
+        
+        except Exception as e:
+            logging.error(f"Error classifying email: {e}")
+        
+        return False
 
     def _contains_important_content(self, body: str) -> bool:
         body_lower = body.lower()
