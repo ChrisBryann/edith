@@ -4,7 +4,6 @@ from typing import List
 from datetime import datetime, timedelta
 
 from .constants import SPAM_KEYWORDS, IMPORTANT_SENDERS, IMPORTANT_SUBJECTS, LIST_HEADER_KEYS
-from .helpers import contains_any_keyword, clamp01, recency_score
 
 from edith.lib.shared.models import EmailMessage, EmailFilterScore
 from edith.config import EmailAssistantConfig
@@ -99,14 +98,14 @@ class EmailFilter:
             reasons.append("Unread")
 
         # Recency
-        r = recency_score(email.received_at, now)
+        r = self._recency_score(email.received_at, now)
         score += 0.15 * r
         if r >= 0.8:
             reasons.append("Recent")
 
         # Keywords
         text = f"{email.subject}\n{email.snippet}\n{email.body_text or ''}"
-        if contains_any_keyword(text, IMPORTANT_SUBJECTS):
+        if self._contains_any_keyword(text, IMPORTANT_SUBJECTS):
             score += 0.20
             reasons.append("Contains important keywords")
 
@@ -125,10 +124,10 @@ class EmailFilter:
             score -= 0.10
             reasons.append("Looks promotional")
 
-        score = clamp01(score)
+        score = self._clamp01(score)
         
         # If Spam, rule it out TODO: should I immediately zero it out?
-        if contains_any_keyword(text, SPAM_KEYWORDS):
+        if self._contains_any_keyword(text, SPAM_KEYWORDS):
             score = 0.0
 
         # Additional, get the prediction score from ML Spam Detection using TinyBERT
@@ -143,12 +142,12 @@ class EmailFilter:
             
             
         # Bucket thresholds TODO: (tune these)
-        if score >= 0.75:
-            bucket = "important"
-        elif score >= 0.45:
-            bucket = "relevant"
-        else:
-            bucket = "other"
+        # if score >= 0.75:
+        #     bucket = "important"
+        # elif score >= 0.45:
+        #     bucket = "relevant"
+        # else:
+        #     bucket = "other"
             
 
         # return EmailFilterScore(email_id=email.id, score=score, bucket=bucket, reasons=reasons)
@@ -157,10 +156,10 @@ class EmailFilter:
     
     
     def _is_important_sender(self, sender: str) -> bool:
-        return contains_any_keyword(sender, IMPORTANT_SENDERS)
+        return self._contains_any_keyword(sender, IMPORTANT_SENDERS)
     
     def _contains_important_keywords(self, subject: str) -> bool:
-        return contains_any_keyword(subject, IMPORTANT_SUBJECTS)
+        return self._contains_any_keyword(subject, IMPORTANT_SUBJECTS)
     
     def _is_recent_email(self, date: datetime) -> bool:
         now = datetime.now()
@@ -171,19 +170,19 @@ class EmailFilter:
     
     def _is_spam(self, email: EmailMessage) -> bool:
         # Check subject for spam keywords
-        if contains_any_keyword(email.subject, SPAM_KEYWORDS):
+        if self._contains_any_keyword(email.subject, SPAM_KEYWORDS):
             return True
         
         # Check sender for spam patterns
         # Removed 'noreply' as it is often used for receipts/tickets
-        if contains_any_keyword(email.sender, {"marketing"}):
+        if self._contains_any_keyword(email.sender, {"marketing"}):
             return True
         
         # Check if email has many recipients (likely marketing)
         # This would require additional parsing of headers
         
         # Check body for common marketing footers (Universal fallback for non-Gmail)
-        if contains_any_keyword(email.body, {'unsubscribe', 'view in browser', 'update preferences'}):
+        if self._contains_any_keyword(email.body, {'unsubscribe', 'view in browser', 'update preferences'}):
             return True
         
         return False
@@ -235,3 +234,20 @@ class EmailFilter:
     def add_important_subject_keyword(self, keyword: str):
         if keyword not in IMPORTANT_SUBJECTS:
             IMPORTANT_SUBJECTS.append(keyword)
+            
+    # --- Helper Functions ---
+    
+    def _recency_score(received_at: datetime, now: datetime) -> float:
+        age = now - received_at
+        if age <= timedelta(hours=6): return 1.0
+        if age <= timedelta(days=1): return 0.8
+        if age <= timedelta(days=3): return 0.6
+        if age <= timedelta(days=7): return 0.4
+        return 0.2
+    
+    def _clamp01(x: float) -> float:
+        return 0.0 if x < 0 else 1.0 if x > 1 else x
+    
+    def _contains_any_keyword(text: str, keywords: set[str]) -> bool:
+        t = (text or "").lower()
+        return any(k.lower() in t for k in keywords)
