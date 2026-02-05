@@ -19,15 +19,7 @@ class EmailMessage:
     body: str
     date: datetime
     is_unread: bool
-    has_attachments: bool
     headers: Dict[str, str]   # e.g. {"List-Unsubscribe": "..."}
     is_relevant: bool = False
     account_type: str = "personal"
     labels: List[str] = field(default_factory=list)
-
-@dataclass
-class EmailFilterScore:
-    email_id: str
-    score: float
-    bucket: str
-    reasons: list[str] = field(default_factory=list)

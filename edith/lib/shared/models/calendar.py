@@ -1,7 +1,5 @@
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-
+from dataclasses import dataclass
 @dataclass
 class CalendarEvent:
     id: str
@@ -11,8 +9,3 @@ class CalendarEvent:
     description: str
     source_email: str
     calendar_type: str = "primary"
-
-class Environment(Enum):
-    DEV = "dev"
-    TEST = "test"
-    PROD = "prod"

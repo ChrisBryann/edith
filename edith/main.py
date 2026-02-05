@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 # Import our modular services
 from edith.config import EmailAssistantConfig
-from edith.models import Environment
+from edith.lib.shared.models.util import Environment
 from edith.services.email.fetcher import EmailFetcher
 from edith.services.calendar.service import CalendarService
 from edith.services.email.rag import EmailRAGSystem

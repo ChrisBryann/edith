@@ -19,101 +19,11 @@ def test_get_true_metrics(dummy_live_emails):
 
 # --- Testing Spam Detection using DistillBERT --- 
 
-# @spam_metrics
-# def test_spam_ml_detection(email_filter, dummy_live_emails):
-#     """Tests Spam Detection ML LLM service from Email Filter service if it can detect spam emails correctly"""
-#     for email in dummy_live_emails:
-#         is_spam = email_filter._is_spam_ml(email)
-#         test_spam_ml_detection._record(
-#             expected_is_spam=is_spam,
-#             predicted_is_spam=not email.is_relevant,
-#         )
-
-# @spam_metrics
-# def test_spam_heuristics_detection(email_filter, dummy_live_emails):
-#     """Tests heuristic classification of email to detect spam or not"""
-    
-
-#     for email in dummy_live_emails:
-#         is_relevant = email_filter._is_relevant(email)
-#         test_spam_heuristics_detection._record(
-#             expected_is_spam=is_relevant,
-#             predicted_is_spam=email.is_relevant,
-#         )
-# @spam_metrics
-# def test_spam_ml_heuristics_detection(email_filter, dummy_live_emails):
-#     """Tests ML LLM detection first and pass the rest of the relevant ones through heuristics filtering for spam emails or not"""
-
-#     relevant_emails = []
-    
-#     for i, email in enumerate(dummy_live_emails):
-#         is_spam = email_filter._is_spam_ml(email)
-#         if not is_spam:
-#             relevant_emails.append(i)
-#         else:
-#             test_spam_ml_heuristics_detection._record(
-#                 expected_is_spam=not is_spam,
-#                 predicted_is_spam=email.is_relevant,
-#             )   
-        
-    
-#     # after getting the emails that are not spam from ML filtering,
-#     # filter using heuristic scoring
-    
-#     for i in relevant_emails:
-#         email = dummy_live_emails[i]
-#         is_relevant = email_filter._is_relevant(email)
-#         test_spam_ml_heuristics_detection._record(
-#             expected_is_spam=is_relevant,
-#             predicted_is_spam=email.is_relevant,
-#         )
-        
-        
-# @spam_metrics
-# def test_spam_heuristics_ml_detection(email_filter, dummy_live_emails):
-#     """Tests heuristics filtering first and pass the rest of the relevant ones through ML LLM detection for spam emails or not"""
-
-#     relevant_emails = []
-    
-#     for i, email in enumerate(dummy_live_emails):
-#         is_relevant = email_filter._is_relevant(email)
-#         if is_relevant:
-#             relevant_emails.append(i)
-#         else:
-#             test_spam_heuristics_ml_detection._record(
-#                 expected_is_spam=is_relevant,
-#                 predicted_is_spam=email.is_relevant,
-#             )
-    
-#     # after getting the emails that are not spam from heuristics filtering,
-#     # filter using ML detection
-    
-#     for i in relevant_emails:
-#         email = dummy_live_emails[i]
-#         is_spam = email_filter._is_spam_ml(email)
-#         test_spam_heuristics_ml_detection._record(
-#             expected_is_spam=not is_spam,
-#             predicted_is_spam=email.is_relevant,
-#         )
-        
-# @spam_metrics
-# def test_spam_heuristics_ml_combined_detection(email_filter, dummy_live_emails):
-#     """Tests heuristics filtering first and ML LLM detection TOGETHER for spam emails or not"""
-    
-#     for email in dummy_live_emails:
-#         is_relevant = not email_filter._is_spam_ml(email) or email_filter._is_relevant(email)
-#         test_spam_heuristics_ml_combined_detection._record(
-#             expected_is_spam=is_relevant,
-#             predicted_is_spam=email.is_relevant,
-#         )
-
-# --- Testing Spam Detection using Zero Shot Classification with MNLI --- 
-
 @spam_metrics
 def test_spam_ml_detection(email_filter, dummy_live_emails):
     """Tests Spam Detection ML LLM service from Email Filter service if it can detect spam emails correctly"""
     for email in dummy_live_emails:
-        is_spam = email_filter._is_spam_ml_zero_shot(email)
+        is_spam = email_filter._is_spam_ml(email)
         test_spam_ml_detection._record(
             expected_is_spam=is_spam,
             predicted_is_spam=not email.is_relevant,
@@ -130,7 +40,6 @@ def test_spam_ml_detection(email_filter, dummy_live_emails):
 #             expected_is_spam=is_relevant,
 #             predicted_is_spam=email.is_relevant,
 #         )
-
 @spam_metrics
 def test_spam_ml_heuristics_detection(email_filter, dummy_live_emails):
     """Tests ML LLM detection first and pass the rest of the relevant ones through heuristics filtering for spam emails or not"""
@@ -138,7 +47,7 @@ def test_spam_ml_heuristics_detection(email_filter, dummy_live_emails):
     relevant_emails = []
     
     for i, email in enumerate(dummy_live_emails):
-        is_spam = email_filter._is_spam_ml_zero_shot(email)
+        is_spam = email_filter._is_spam_ml(email)
         if not is_spam:
             relevant_emails.append(i)
         else:
@@ -181,7 +90,7 @@ def test_spam_heuristics_ml_detection(email_filter, dummy_live_emails):
     
     for i in relevant_emails:
         email = dummy_live_emails[i]
-        is_spam = email_filter._is_spam_ml_zero_shot(email)
+        is_spam = email_filter._is_spam_ml(email)
         test_spam_heuristics_ml_detection._record(
             expected_is_spam=not is_spam,
             predicted_is_spam=email.is_relevant,
@@ -192,8 +101,100 @@ def test_spam_heuristics_ml_combined_detection(email_filter, dummy_live_emails):
     """Tests heuristics filtering first and ML LLM detection TOGETHER for spam emails or not"""
     
     for email in dummy_live_emails:
-        is_relevant = not email_filter._is_spam_ml_zero_shot(email) or email_filter._is_relevant(email)
+        is_relevant = email_filter._is_relevant(email) or not email_filter._is_spam_ml(email)
         test_spam_heuristics_ml_combined_detection._record(
             expected_is_spam=is_relevant,
             predicted_is_spam=email.is_relevant,
         )
+    
+
+# --- Testing Spam Detection using Zero Shot Classification with MNLI --- 
+
+# @spam_metrics
+# def test_spam_ml_detection(email_filter, dummy_live_emails):
+#     """Tests Spam Detection ML LLM service from Email Filter service if it can detect spam emails correctly"""
+#     for email in dummy_live_emails:
+#         is_spam = email_filter._is_spam_ml_zero_shot(email)
+#         test_spam_ml_detection._record(
+#             expected_is_spam=is_spam,
+#             predicted_is_spam=not email.is_relevant,
+#         )
+
+# @spam_metrics
+# def test_spam_heuristics_detection(email_filter, dummy_live_emails):
+#     """Tests heuristic classification of email to detect spam or not"""
+    
+
+#     for email in dummy_live_emails:
+#         is_relevant = email_filter._is_relevant(email)
+#         test_spam_heuristics_detection._record(
+#             expected_is_spam=is_relevant,
+#             predicted_is_spam=email.is_relevant,
+#         )
+
+# @spam_metrics
+# def test_spam_ml_heuristics_detection(email_filter, dummy_live_emails):
+#     """Tests ML LLM detection first and pass the rest of the relevant ones through heuristics filtering for spam emails or not"""
+
+#     relevant_emails = []
+    
+#     for i, email in enumerate(dummy_live_emails):
+#         is_spam = email_filter._is_spam_ml_zero_shot(email)
+#         if not is_spam:
+#             relevant_emails.append(i)
+#         else:
+#             test_spam_ml_heuristics_detection._record(
+#                 expected_is_spam=not is_spam,
+#                 predicted_is_spam=email.is_relevant,
+#             )   
+        
+    
+#     # after getting the emails that are not spam from ML filtering,
+#     # filter using heuristic scoring
+    
+#     for i in relevant_emails:
+#         email = dummy_live_emails[i]
+#         is_relevant = email_filter._is_relevant(email)
+#         test_spam_ml_heuristics_detection._record(
+#             expected_is_spam=is_relevant,
+#             predicted_is_spam=email.is_relevant,
+#         )
+        
+        
+# @spam_metrics
+# def test_spam_heuristics_ml_detection(email_filter, dummy_live_emails):
+#     """Tests heuristics filtering first and pass the rest of the relevant ones through ML LLM detection for spam emails or not"""
+
+#     relevant_emails = []
+    
+#     for i, email in enumerate(dummy_live_emails):
+#         is_relevant = email_filter._is_relevant(email)
+#         if is_relevant:
+#             relevant_emails.append(i)
+#         else:
+#             test_spam_heuristics_ml_detection._record(
+#                 expected_is_spam=is_relevant,
+#                 predicted_is_spam=email.is_relevant,
+#             )
+    
+#     # after getting the emails that are not spam from heuristics filtering,
+#     # filter using ML detection
+    
+#     for i in relevant_emails:
+#         email = dummy_live_emails[i]
+#         is_spam = email_filter._is_spam_ml_zero_shot(email)
+#         test_spam_heuristics_ml_detection._record(
+#             expected_is_spam=not is_spam,
+#             predicted_is_spam=email.is_relevant,
+#         )
+        
+# @spam_metrics
+# def test_spam_heuristics_ml_combined_detection(email_filter, dummy_live_emails):
+#     """Tests heuristics filtering first and ML LLM detection TOGETHER for spam emails or not"""
+    
+#     for email in dummy_live_emails:
+#         is_relevant = not email_filter._is_spam_ml_zero_shot(email) or email_filter._is_relevant(email)
+#         test_spam_heuristics_ml_combined_detection._record(
+#             expected_is_spam=is_relevant,
+#             predicted_is_spam=email.is_relevant,
+#         )

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import os
 
 from edith.config import EmailAssistantConfig
-from edith.models import CalendarEvent
+from edith.lib.shared.models.calendar import CalendarEvent
 from edith.services.email.fetcher import EmailFetcher
 from edith.services.calendar.service import CalendarService
 from edith.services.notification.service import NotificationService

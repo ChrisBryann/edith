@@ -10,6 +10,7 @@ from email.utils import parsedate_to_datetime
 from bs4 import BeautifulSoup
 from google.oauth2.credentials import Credentials
 import wsgiref.simple_server
+from email.utils import getaddresses
 
 from edith.lib.shared.models.email import EmailMessage
 from edith.config import EmailAssistantConfig
@@ -172,6 +173,8 @@ class GmailService:
             subject = ""
             sender = ""
             date_str = ""
+            cc_emails = []
+            to_emails = []
             
             for header in headers:
                 if header['name'].lower() == 'subject':
@@ -180,9 +183,19 @@ class GmailService:
                     sender = header['value']
                 elif header['name'].lower() == 'date':
                     date_str = header['value']
+                elif header['name'].lower() == 'cc':
+                    cc_emails = [email for _, email in getaddresses([header['value']])]
+                elif header['name'].lower() == 'to':
+                    to_emails = [email for _, email in getaddresses([header['value']])]
             
             # Extract email body
-            body = self._get_email_body(msg['payload'])
+            body = self._get_email_body(msg.get('payload', {}))
+            
+            # Get email thread ID (if exists)
+            thread_id = msg.get("threadId", "")
+            
+            # Check if email is unread
+            is_unread = self._is_unread(msg.get("labelIds", []))
             
             # Parse date
             try:
@@ -191,6 +204,8 @@ class GmailService:
                 # Fallback if date parsing fails
                 date = datetime.now()
             
+            headers_dict = {h['name']: h['value'] for h in headers}
+            
             return EmailMessage(
                 id=msg['id'],
                 subject=subject,
@@ -198,11 +213,19 @@ class GmailService:
                 body=body,
                 date=date,
                 account_type="personal",  # Default for MVP
-                labels=msg.get('labelIds', [])
+                labels=msg.get('labelIds', []),
+                headers=headers_dict,
+                cc_emails=cc_emails,
+                thread_id=thread_id,
+                to_emails=to_emails,
+                is_unread=is_unread
             )
         except Exception as e:
             print(f"Error parsing email: {e}")
             return None
+    
+    def _is_unread(self, label_ids: List[str]) -> bool:
+        return "UNREAD" in label_ids
     
     def _get_email_body(self, payload: Dict[str, Any]) -> str:
         if 'parts' in payload:
