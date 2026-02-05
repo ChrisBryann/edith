@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional
 from edith.config import EmailAssistantConfig
-from edith.models import EmailMessage
+from edith.lib.shared.models.email import EmailMessage
 from edith.services.email.providers.gmail import GmailService
 
 class EmailFetcher:

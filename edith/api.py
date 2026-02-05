@@ -8,12 +8,12 @@ from datetime import datetime, timedelta
 import os
 
 from edith.config import EmailAssistantConfig
-from edith.models import CalendarEvent
+from edith.lib.shared.models.calendar import CalendarEvent
 from edith.services.email.fetcher import EmailFetcher
 from edith.services.calendar.service import CalendarService
 from edith.services.notification.service import NotificationService
 from edith.services.email.rag import EmailRAGSystem
-from edith.services.email.filter import EmailFilter
+from edith.services.email.filter.filter import EmailFilter
 from edith.services.security.guard import PromptGuard
 
 from edith.dependencies import *
@@ -35,7 +35,7 @@ async def startup_event(app: FastAPI):
         app.state.email_fetcher = EmailFetcher(app.state.config)
         app.state.calendar_service = CalendarService(app.state.config)
         app.state.notification_service = NotificationService(app.state.calendar_service)
-        app.state.email_filter = EmailFilter()
+        app.state.email_filter = EmailFilter(app.state.config)
         app.state.prompt_guard = PromptGuard()
         
         # initialize RAG system - check if Gemini API Key is defined from env

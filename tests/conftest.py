@@ -2,12 +2,12 @@ import pytest
 import os
 import shutil
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Dict
 
 from edith.config import EmailAssistantConfig
-from edith.models import EmailMessage
 from edith.services.email.rag import EmailRAGSystem
-from tests.factories import get_dummy_data
+from edith.services.email.filter.filter import EmailFilter
+from tests.factories import get_dummy_data, get_dummy_live_data
 
 @pytest.fixture(scope="session")
 def test_config():
@@ -41,5 +41,34 @@ def rag_system(test_config):
     return rag
 
 @pytest.fixture(scope="session")
+def email_filter(test_config):
+    """Initializes the Email Filter service"""
+    if not test_config.spam_detection_model_id and not test_config.hf_token:
+        pytest.skip("SPAM_DETECTION_MODEL_ID and/or HF_TOKEN not found in environment")
+    
+    filter = EmailFilter(test_config)
+    
+    return filter
+
+@pytest.fixture(scope="session")
 def dummy_emails():
     return get_dummy_data()
+
+@pytest.fixture(scope="session")
+def dummy_live_emails():
+    return get_dummy_live_data()
+
+@pytest.fixture(scope="session")
+def dummy_single_email():
+    return get_dummy_live_data(1)[0] # only one
+
+@pytest.fixture(scope="session")
+def record(metrics: Dict, expected_is_spam: bool, predicted_is_spam: bool):
+    metrics["total"] += 1
+    if expected_is_spam == predicted_is_spam:
+        metrics["correct"] += 1
+    else:
+        if predicted_is_spam and not expected_is_spam:
+            metrics["false_pos"] += 1
+        elif not predicted_is_spam and expected_is_spam:
+            metrics["false_neg"] += 1

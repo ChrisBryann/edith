@@ -1,7 +1,7 @@
 import pytest
 import os
 from edith.services.email.fetcher import EmailFetcher
-from edith.services.email.filter import EmailFilter
+from edith.services.email.filter.filter import EmailFilter
 from edith.services.email.rag import EmailRAGSystem
 
 @pytest.mark.integration

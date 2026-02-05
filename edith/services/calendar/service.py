@@ -2,8 +2,8 @@ from googleapiclient.discovery import build
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 
-from models import CalendarEvent
-from config import EmailAssistantConfig
+from edith.lib.shared.models.calendar import CalendarEvent
+from edith.config import EmailAssistantConfig
 
 class CalendarService:
     def __init__(self, config: EmailAssistantConfig):
