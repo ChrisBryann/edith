@@ -8,7 +8,7 @@ Welcome to the Edith project! This guide will help you set up your development e
 - Docker & Docker Compose (optional, for containerized dev)
 - A Google Cloud Project with Gmail & Calendar APIs enabled
 
-## 🚀 Quick Start
+🚀 Quick Start
 
 ### 1. Install Dependencies
 
@@ -24,17 +24,19 @@ Create a `.env` file in the root directory:
 cp .env.example .env
 ```
 
-```env
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-GMAIL_CREDENTIALS_PATH=YOUR_GMAIL_OAUTH_CREDENTIALS_PATH
-CHROMA_DB_PATH=YOUR_CHROMA_DB_PATH
-GEMINI_MODEL=YOUR_GEMINI_MODEL_ID # gemini-2.5-flash
-EDITH_ENCRYPTION_KEY=YOUR_EDITH_ENCRYPTION_KEY # Optional for dev (will auto-generate insecure key if missing)
-EDITH_ENV=YOUR_EDITH_ENV # dev
-SPAM_DETECTION_MODEL_ID=YOUR_SPAM_DETECTION_DISTILLBERT_HUGGINGFACE_MODEL_ID # dima806/email-spam-detection-roberta
-SPAM_ZS_DETECTION_MODEL_ID=YOUR_SPAM_ZERO_SHOT_DETECTION_HUGGINGFACE_MODEL_ID # typeform/distilbert-base-uncased-mnli
-HF_TOKEN=YOUR_HUGGINGFACE_ACCESS_TOKEN
-```
+Then fill in the required values:
+
+| **Variable**         | **Description**                                                       | **Required** |
+| :------------------------- | --------------------------------------------------------------------------- | :-----------------: |
+| GEMINI_API_KEY             | Google Gemini API Key                                                       |         yes         |
+| GMAIL_CREDENTIALS_PATH     | Google OAuth2 Credentials JSON path                                         |         yes         |
+| CHROMA_DB_PATH             | Chroma DB folder path                                                       |         yes         |
+| GEMINI_MODEL               | Google Gemini Model ID                                                      |         yes         |
+| EDITH_ENCRYPTION_KEY       | Edith's Encryption Key                                                      | optional (dev only) |
+| EDITH_ENV                  | Edith's Environment                                                         |         yes         |
+| SPAM_DETECTION_MODEL_ID    | HuggingFace Model ID for Spam Detection<br />using DistillBERT              |         yes         |
+| SPAM_ZS_DETECTION_MODEL_ID | HuggingFace Model ID for Spam Detection<br />using Zero Shot Classification |         yes         |
+| HF_TOKEN                   | HuggingFace Access Token                                                    |         yes         |
 
 ### 3. Google API Setup
 
