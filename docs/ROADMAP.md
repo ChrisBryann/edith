@@ -3,33 +3,53 @@
 ## 🎯 Objective
 Transition Edith from a developer prototype to a user-testable "Alpha" demo.
 
-## Phase 1: The User Experience (Frontend)
-*Priority: Critical | Timeline: 1 Week*
+## Phase 1: The Foundation (React + Vite)
+*Status: In Progress*
 
-Users need a visual interface to interact with their data.
-- [ ] **Web UI (Streamlit)**: Build a lightweight frontend using Streamlit.
-    - **Architecture**: Connects to the `api` service via HTTP (Client-Server model).
-    - **Chat Interface**: A familiar chat bubble UI for Q&A.
-    - **Sidebar Dashboard**: Display "Today's Summary" and "Upcoming Events" persistently.
-    - **Debug Panel**: Toggle to show retrieved emails (transparency builds trust).
-- [ ] **Visual Feedback**: Loading states (spinners) while RAG is processing.
+Users need a high-performance, responsive interface to interact with their data.
+- [x] **Modern Web UI**: Replaced Streamlit with **React + Vite**.
+    - **Architecture**: Single Page Application (SPA) talking to FastAPI backend.
+    - **Chat Interface**: Persistent chat history with citation support.
+    - **Sidebar HUD**: "Heads Up Display" showing "Today's Agenda" synced with Calendar.
+- [x] **Visual Polish**:
+    - Dark Mode premium aesthetic (`#212121` base).
+    - **Flashcard UI**: Modeless, floating details for calendar events (no blocking overlays).
+    - **Inline Expansion**: Quick-glance details in sidebar.
 
 ## Phase 2: Intelligence & Trust
-*Priority: High | Timeline: 1-2 Weeks*
+*Priority: High*
 
 The demo must feel "smart" and "safe".
-- [ ] **ML Filtering Integration**: Replace current heuristics with the TinyBERT model to ensure spam doesn't pollute the demo.
-- [ ] **Citations**: When Edith answers, it must list the specific emails used as sources (e.g., *"Source: Email from John, Oct 12"*).
-- [ ] **"Demo Mode"**: A launch option that loads the `test_mvp.py` dummy data. This allows you to demo the UI to users without needing their real Google credentials immediately.
+- [x] **Mock Data Layer**: dedicated `edith/mocks/` architecture for robust demos.
+- [x] **ML Filtering Integration**: TinyBERT model to separate Signal from Noise.
+- [ ] **Contextual Awareness**:
+    - Chat should understand *which* event you clicked on (e.g., "Summarize emails for *this* meeting").
+    - **Citations**: Explicit links to source emails.
 
-## Phase 3: Performance & Polish
-*Priority: Medium | Timeline: 1 Week*
+## Phase 3: Continuous Assistant Loop
+*Priority: Medium*
 
-- [ ] **Async Syncing**: Ensure the UI doesn't freeze while fetching new emails (move `sync_emails` to a true background worker).
-- [ ] **Error Handling**: Graceful messages when the Gmail API quota is hit or auth fails.
-- [ ] **Deployment**: A `docker-compose.yml` setup that spins up both the API and the Streamlit UI with one command.
+Moving away from "Chatbots" to "Always-on Assistance".
+- [x] **Remove "New Chat"**: Shift to a continuous timeline model.
+- [ ] **Daily Briefing**: Auto-generated morning summary in the chat on load.
+- [ ] **Async Syncing**: Background workers for email fetching to prevent UI freezes.
 
-## Phase 4: Future Features (Post-Demo)
-- [ ] **Voice Interaction**: Audio input for queries.
-- [ ] **Write Capabilities**: Draft email replies (currently read-only).
-- [ ] **Multi-Account Support**: Unified view for Work + Personal emails.
+## Phase 4: Future Features
+- [ ] **Voice Interaction**: Audio input/output.
+- [ ] **Action Capabilities**: Draft replies, Accept/Decline invites directly from Flashcards.
+- [ ] **Multi-Account View**: Unified Work + Personal dashboard.
+
+## Phase 5: Expansions (Integrations)
+Connecting Edith to the world.
+- [ ] **MCP Server Support**:
+    - Lib: `mcp` (Official Python SDK).
+    - Goal: Connect to filesystem, database, or other local tools.
+- [ ] **Outlook Integration**:
+    - Lib: `msgraph-sdk` (Microsoft Graph).
+    - Goal: Corporate email/calendar support.
+- [ ] **Discord Integration**:
+    - Lib: `discord.py`.
+    - Goal: Summarize channel discussions, notify on mentions.
+- [ ] **Notion Integration**:
+    - Lib: `notion-client`.
+    - Goal: Index knowledge base pages for RAG.

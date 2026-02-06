@@ -3,19 +3,33 @@ import pytest
 pytestmark = pytest.mark.offline
 
 @pytest.mark.parametrize("scenario, question, expected_phrases", [
-    ("Work Deadline", "When is the deadline for Project Phoenix?", ["November 15", "Friday"]),
-    ("Technical Details", "What port is the staging environment using?", ["8080"]),
-    ("Personal Event", "Where is Mom's birthday party?", ["Italian Place", "Main St"]),
-    ("Travel Details", "What is my seat number for the Tokyo flight?", ["14A"]),
+    ("Work Launch", "When is the Phoenix launch meeting?", ["2pm", "14:00", "2 pm"]),
+    ("QA Status", "Did we get QA sign-off?", ["GREEN light", "Dave"]),
+    ("Personal Dinner", "Do we have dinner plans?", ["Sushi", "7:30"]),
+    ("Doctor", "When is my dentist appointment?", ["4:30 PM", "today"]),
 ])
 def test_rag_retrieval(rag_system, scenario, question, expected_phrases):
     """Tests that the RAG system can retrieve and answer correctly."""
     answer = rag_system.answer_question(question)
     print(f"\nQ: {question}\nA: {answer}")
     
-    # Check if any of the expected phrases are in the answer
-    found = any(phrase.lower() in answer.lower() for phrase in expected_phrases)
-    assert found, f"Expected one of {expected_phrases} in answer: '{answer}'"
+    # LLM-as-a-Judge Evaluation
+    judge_prompt = f"""
+    Question: {question}
+    Answer: {answer}
+    Expected Info: {expected_phrases}
+    
+    Does the answer contain the expected info described? 
+    Respond with exactly YES or NO.
+    """
+    
+    response = rag_system.client.models.generate_content(
+        model=rag_system.config.gemini_model,
+        contents=judge_prompt
+    )
+    
+    is_correct = "YES" in response.text.strip().upper()
+    assert is_correct, f"LLM Judge rejected the answer: '{answer}'. Expected: {expected_phrases}"
 
 def test_rag_negative_case(rag_system):
     """Tests that the system gracefully handles missing information."""

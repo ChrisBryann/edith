@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Set
 
-from services.calendar.service import CalendarService
+from edith.services.calendar.service import CalendarService
 
 class NotificationService:
     def __init__(self, calendar_service: CalendarService):

@@ -8,9 +8,9 @@ def test_encryption_at_rest(rag_system):
     We fetch the raw document from the DB and ensure the plain text is not visible.
     """
     # 1. Pick a known email from dummy data
-    # ID: work_2, Subject: "Phoenix API Specs"
-    email_id = "work_2"
-    target_phrase = "Phoenix API Specs"
+    # ID: work_102, Subject: "RE: QA Sign-off"
+    email_id = "work_102"
+    target_phrase = "RE: QA Sign-off"
     
     # 2. Fetch RAW data from ChromaDB (Bypassing RAG class decryption)
     # We access the underlying collection directly
@@ -21,7 +21,7 @@ def test_encryption_at_rest(rag_system):
     # 3. Verify Document Content is Encrypted
     encrypted_doc = raw_result['documents'][0]
     assert target_phrase not in encrypted_doc, "Raw document content should NOT contain plain text"
-    assert "port 8080" not in encrypted_doc
+    assert "GREEN light" not in encrypted_doc
     
     # 4. Verify Metadata is Encrypted
     metadata = raw_result['metadatas'][0]

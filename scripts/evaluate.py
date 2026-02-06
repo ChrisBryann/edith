@@ -10,7 +10,7 @@ from google.genai import types
 # Import system components
 from edith.config import EmailAssistantConfig
 from edith.services.email.rag import EmailRAGSystem
-from tests.factories import get_dummy_data # Reuse our dummy data generator
+from edith.mocks.email import DummyEmailFetcher
 
 def setup_test_environment():
     """Sets up a clean test environment with dummy data."""
@@ -25,8 +25,9 @@ def setup_test_environment():
         
     rag = EmailRAGSystem(config)
     
-    # Ingest Golden Dataset (Dummy Data)
-    emails = get_dummy_data()
+    # Ingest Golden Dataset using new Mock Architecture
+    fetcher = DummyEmailFetcher(config)
+    emails, _ = fetcher.get_emails(max_results=100)
     rag.index_emails(emails)
     
     return rag, config
@@ -70,23 +71,23 @@ def run_evaluation():
     rag, config = setup_test_environment()
     judge_client = genai.Client(api_key=config.gemini_api_key)
     
-    # 2. Define Golden Dataset (Question + Ground Truth)
+    # 2. Define Golden Dataset (Question + Ground Truth) - Updated to match new mock data
     eval_dataset = [
         {
-            "question": "When is the deadline for Project Phoenix?",
-            "ground_truth": "The deadline was moved to next Friday, November 15th."
+            "question": "When is the Phoenix launch meeting?",
+            "ground_truth": "The launch meeting is at 2 PM today (Go/No-Go meeting)."
         },
         {
-            "question": "What port is the staging environment using?",
-            "ground_truth": "Staging is using port 8080."
+            "question": "Did we get QA sign-off?",
+            "ground_truth": "Yes, Dave gave the GREEN light for the launch."
         },
         {
-            "question": "Where is Mom's birthday party?",
-            "ground_truth": "It is at The Italian Place on Main St."
+            "question": "When is my dentist appointment?",
+            "ground_truth": "Your dentist appointment is at 4:30 PM today."
         },
         {
-            "question": "What is my seat number for the Tokyo flight?",
-            "ground_truth": "Seat 14A."
+            "question": "Do we have dinner plans?",
+            "ground_truth": "Yes, sushi plans at 7:30 PM."
         },
         {
             "question": "What is the budget for Project Phoenix?",

@@ -1,0 +1,36 @@
+/* Default styles removed to fix layout */
+
+.event-flashcard {
+    position: fixed;
+    left: 270px;
+    /* Sidebar width + gap */
+    top: 80px;
+    /* Align near top of content area */
+    width: 340px;
+    background: var(--bg-color);
+    /* Ensure opaque background */
+    color: var(--text-primary);
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    /* Stronger shadow */
+    border: 1px solid #333;
+    /* Explicit border */
+    z-index: 50;
+    /* Above chat content */
+    animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.95) translateX(-10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Modal styles removed/unused */
