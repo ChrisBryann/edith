@@ -96,7 +96,7 @@ function App() {
       <div className="sidebar">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/edith_logo.svg" alt="edith" style={{ height: '32px' }} />
+            <img src="/edith-logo-white.svg" alt="edith" style={{ height: '32px' }} />
           </div>
           {isDemo && <span className="demo-badge">Demo Mode</span>}
         </div>
