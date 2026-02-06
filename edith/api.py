@@ -155,10 +155,94 @@ async def get_config_status(config: EmailAssistantConfig = Depends(get_config)):
         "env": config.env.value
     }
 
+@app.post("/add-email-account")
+async def add_email_account(account: EmailAccountRequest, config: EmailAssistantConfig = Depends(get_config)):
+    config.add_email_account(
+        account.email_address, 
+        account.is_primary, 
+        account.account_type
+    )
+    return {"status": "success", "message": f"Added {account.email_address}"}
+
+@app.post("/sync-emails")
+async def sync_emails(background_tasks: BackgroundTasks, email_fetcher: EmailFetcher = Depends(get_email_fetcher), email_filter: EmailFilter = Depends(get_email_filter), rag_system: EmailRAGSystem = Depends(get_rag_system), prompt_guard: PromptGuard = Depends(get_prompt_guard)):
+    if not email_fetcher.creds and not email_fetcher.config.use_mock_data:
+        raise HTTPException(status_code=401, detail="Service not authenticated")
+
+    def process_sync():
+        print("Starting background sync...")
+        system_status.sync_state = "syncing"
+        system_status.sync_progress = 0
+        system_status.sync_message = "Starting sync..."
+        
+        page_token = None
+        total_fetched = 0
+        
+        # Target: 1 month back
+        query = "newer_than:1m -category:promotions -category:social -in:spam -in:trash"
+        readiness_date = datetime.now() - timedelta(days=7)
+        MAX_EMAILS = 500
+        
+        try:
+            while True:
+                if total_fetched >= MAX_EMAILS:
+                    break
+
+                emails, next_token = email_fetcher.get_emails(max_results=50, query=query, page_token=page_token)
+                if not emails:
+                    break
+                
+                # Zero Trust Ingestion: Filter unsafe content
+                safe_emails = []
+                for email in emails:
+                    if prompt_guard.validate(email.subject + " " + email.body):
+                        safe_emails.append(email)
+                    else:
+                        print(f"   🛡️ Security Alert: Dropped email '{email.subject[:30]}...' at ingestion.")
+                
+                total_fetched += len(safe_emails)
+                system_status.sync_message = f"Fetched {total_fetched} emails..."
+                
+                # Filter relevant emails if email_filter is available
+                if email_filter:
+                    relevant = email_filter.filter_relevant_emails(safe_emails)
+                else:
+                    relevant = safe_emails  # In mock mode without filter
+                    
+                if relevant:
+                    rag_system.index_emails(relevant)
+                    
+                system_status.sync_progress = total_fetched
+                
+                # Check readiness
+                if not system_status.is_ready and emails:
+                    oldest_date = min(e.date for e in emails)
+                    if oldest_date.tzinfo is not None:
+                        oldest_date = oldest_date.replace(tzinfo=None)
+                    
+                    if oldest_date < readiness_date:
+                        system_status.is_ready = True
+                
+                page_token = next_token
+                if not page_token:
+                    break
+            
+            system_status.sync_state = "completed"
+            system_status.sync_message = f"Sync complete. Processed {total_fetched} emails."
+            system_status.is_ready = True
+            print(f"Sync complete. Total fetched: {total_fetched}")
+            
+        except Exception as e:
+            print(f"Sync error: {e}")
+            system_status.sync_state = "error"
+            system_status.sync_message = f"Error: {str(e)}"
+
+    background_tasks.add_task(process_sync)
+    return {"status": "success", "message": "Sync started in background"}
+
 @app.post("/ask-question")
 async def ask_question(request: QuestionRequest, rag_system: EmailRAGSystem = Depends(get_rag_system), calendar_service: CalendarService = Depends(get_calendar_service)):
     calendar_context = ""
-    # In mock mode, we always get events
     events = calendar_service.get_events(days_ahead=7)
     if events:
         calendar_context = format_calendar_events(events)
@@ -172,14 +256,35 @@ async def ask_question(request: QuestionRequest, rag_system: EmailRAGSystem = De
         }
     return {"question": request.question, "answer": response, "sources": []}
 
+@app.get("/email-summary")
+async def email_summary(days: int = 7, rag_system: EmailRAGSystem = Depends(get_rag_system)):
+    summary = rag_system.get_email_summary(days=days)
+    return {"days": days, "summary": summary}
+
 @app.get("/calendar-events")
 async def get_calendar_events(days_ahead: int = 30, calendar_service: CalendarService = Depends(get_calendar_service)):
     # Check if it's the real service (which doesn't have 'store')
     if not hasattr(calendar_service, "store"):
          if not calendar_service.service:
-             # Real service check
              raise HTTPException(status_code=401, detail="Calendar not authenticated")
     return calendar_service.get_events(days_ahead)
+
+@app.get("/relevant-emails")
+async def get_relevant_emails(limit: int = 20, email_fetcher: EmailFetcher = Depends(get_email_fetcher), email_filter: EmailFilter = Depends(get_email_filter)):
+    if not email_fetcher.creds and not email_fetcher.config.use_mock_data:
+        raise HTTPException(status_code=401, detail="Service not authenticated")
+    emails, _ = email_fetcher.get_emails(max_results=limit*2)
+    if email_filter:
+        relevant = email_filter.filter_relevant_emails(emails)
+        return relevant[:limit]
+    return emails[:limit]
+
+@app.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...), rag_system: EmailRAGSystem = Depends(get_rag_system)):
+    """Transcribe an uploaded audio file (MP3, WAV, etc.)"""
+    content = await file.read()
+    transcript = rag_system.transcribe_audio(content, mime_type=file.content_type or "audio/mp3")
+    return {"filename": file.filename, "transcript": transcript}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
