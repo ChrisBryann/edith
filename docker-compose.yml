@@ -17,7 +17,7 @@ services:
 
   # Frontend
   frontend:
-    image: node:22-alpine
+    image: node:22-alpine3.18
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -29,3 +29,21 @@ services:
       - VITE_API_URL=http://localhost:8000
     depends_on:
       - api
+
+  next-frontend:
+    build:
+      context: ./next-frontend
+      dockerfile: Dockerfile
+      target: dev
+    env_file: ./next-frontend/.env
+    volumes:
+      - ./next-frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
+  
+    
+    
