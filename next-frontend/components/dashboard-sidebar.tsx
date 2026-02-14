@@ -3,10 +3,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -17,9 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/dark-mode-toggle";
 import { useEffect, useMemo, useState } from "react";
-import { DASHBOARD_ROUTES, DashboardRoute } from "@/lib/dashboard-routes";
+import { DASHBOARD_ROUTES, NavRoute } from "@/lib/dashboard-routes";
 import { usePathname, useSearchParams } from "next/navigation";
-import path from "path";
 
 export default function DashboardSidebar({
   children,
@@ -33,40 +30,35 @@ export default function DashboardSidebar({
     return `${pathname}${searchParams.size > 0 ? `?${searchParams.toString()}` : ""}`;
   }, [pathname, searchParams]);
 
-  const findRoute = (currentUrl: string) => {
-    for (const parent of DASHBOARD_ROUTES) {
-      // match parent directly
-      if (parent.url === currentUrl) {
-        return { parentRoute: parent, childRoute: null };
-      }
+  //   const findRoute = (currentUrl: string) => {
+  //     for (const parent of DASHBOARD_ROUTES) {
+  //       // match parent directly
+  //       if (currentUrl.includes(parent.url)) {
+  //         return { parentRoute: parent };
+  //       }
+  //     }
 
-      // match child
-      for (const child of parent.items ?? []) {
-        if (child.url === currentUrl) {
-          return { parentRoute: parent, childRoute: child };
-        }
-      }
-    }
+  //     return { parentRoute: null };
+  //   };
 
-    return { parentRoute: null, childRoute: null };
-  };
+  //   const { parentRoute } = findRoute(currentUrl);
 
-  const { parentRoute, childRoute } = findRoute(currentUrl);
-
-  useEffect(() => {
-    console.log(currentUrl);
-  }, [currentUrl]);
+  const [activeItem, setActiveItem] = useState<NavRoute>(
+    DASHBOARD_ROUTES.find((r) => currentUrl.includes(r.url)) ??
+      DASHBOARD_ROUTES[0],
+  );
 
   return (
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "19rem",
+          "--sidebar-width": "400px",
         } as React.CSSProperties
       }
+      defaultOpen={activeItem.enableSubSidebar} // keeps the sub sidebar visibility controlled when page loads
     >
-      <AppSidebar currentRouteUrl={currentUrl} />
-      <SidebarInset>
+      <AppSidebar activeItem={activeItem} setActiveItem={setActiveItem} />
+      <SidebarInset className="flex flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ms-1" />
           <Separator
@@ -75,28 +67,13 @@ export default function DashboardSidebar({
           />
           <Breadcrumb>
             <BreadcrumbList>
-              {parentRoute && (
-                <>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href={parentRoute.url}>
-                      {parentRoute?.title ?? ""}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  {childRoute && <BreadcrumbSeparator className="hidden md:block" />}
-                </>
-              )}
-
               <BreadcrumbItem>
-                <BreadcrumbPage>{childRoute?.title ?? ""}</BreadcrumbPage>
+                <BreadcrumbPage>{activeItem.title ?? ""}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="ml-auto flex gap-4">
-            <ModeToggle />
-            <Button className="rounded-lg">Log in</Button>
-          </div>
         </header>
-        {children}
+        <div className="flex-1 overflow-hidden min-h-0">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
