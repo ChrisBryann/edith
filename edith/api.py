@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timedelta
+import redis.asyncio as redis
 import os
 
 from edith.config import EmailAssistantConfig
@@ -18,6 +19,7 @@ from edith.services.notification.service import NotificationService
 from edith.services.email.rag import EmailRAGSystem
 from edith.services.email.filter.filter import EmailFilter
 from edith.services.security.guard import PromptGuard
+from edith.services.email.routers import router as email_router
 
 from edith.dependencies import *
 
@@ -47,6 +49,9 @@ async def startup_event(app: FastAPI):
         if not app.state.config.use_mock_data:
             if app.state.email_fetcher.authenticate():
                 print("Email Service authenticated.")
+        
+        # set up redis
+        app.state.redis = redis.Redis(host='redis', port=6379, password='admin1234', decode_responses=True)
         
         app.state.notification_service = NotificationService(app.state.calendar_service)
         
@@ -100,6 +105,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=startup_event
 )
+
+app.include_router(email_router)
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -287,4 +294,4 @@ async def transcribe_audio(file: UploadFile = File(...), rag_system: EmailRAGSys
     return {"filename": file.filename, "transcript": transcript}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("edith.api:app", host="0.0.0.0", port=8000, reload=True)

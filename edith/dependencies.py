@@ -6,6 +6,7 @@ from edith.services.email.rag import EmailRAGSystem
 from edith.services.calendar.service import CalendarService
 from edith.services.notification.service import NotificationService
 from edith.services.security.guard import PromptGuard
+from redis.asyncio import Redis
 
 def get_config(request: Request) -> EmailAssistantConfig:
     return request.app.state.config
@@ -27,3 +28,6 @@ def get_rag_system(request: Request) -> EmailRAGSystem:
 
 def get_prompt_guard(request: Request) -> PromptGuard:
     return request.app.state.prompt_guard
+
+def get_redis(request: Request) -> Redis:
+    return request.app.state.redis

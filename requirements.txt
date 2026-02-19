@@ -16,3 +16,4 @@ torch
 streamlit
 requests
 sentencepiece
+redis
